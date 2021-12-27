@@ -5,7 +5,8 @@ Signal Server communication
 
  - [ ] Support Websocket
  - [ ] Auth Token
- - [ ] Framework NestJS
+ - [x] Framwork Express
+ - [x] NodeJS module not commonjs
  - [ ] support mongo backend DB
  - [ ] support conectivity Web-Extension Firefox
  - [ ] storage S3 for transfer data
