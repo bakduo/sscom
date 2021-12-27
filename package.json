@@ -9,7 +9,7 @@
     "test": "cross-env NODE_ENV='development' ./node_modules/.bin/mocha test/*.*.mjs --reporter mochawesome --timeout 15000 --exit"
   },
   "author": "bakduo",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
