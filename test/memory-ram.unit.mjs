@@ -109,4 +109,15 @@ describe('Memory Storage',()=>{
         });
     });
 
+    describe('Find by param one User', () => {
+        it('debería buscar por medio de un parametro a un usuario de la estructura', async () => {
+            let users = await storageMemory.getAll();
+            const email = users[0].email;
+            let foundUser = await storageMemory.findByParam('email',email);
+            expect(foundUser).to.be.a('object');
+            expect(foundUser).to.include.keys('id','name','surname','age','email');
+            expect(foundUser.id).to.eql(users[0].id);
+        });
+    });
+
 });

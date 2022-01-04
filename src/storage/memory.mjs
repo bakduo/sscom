@@ -19,6 +19,14 @@ export default class MemoryRAM extends GenericStorage {
         return MemoryRAM.instance;
     }
 
+    findByParam = async (param,value) => {
+        const itemFound = this.#items.find((item)=> {return (item[param]===value)});
+        if (itemFound){
+            return itemFound;
+        }
+        return false;
+    }
+
     findOne = async (id)=>{
         const item = this.#items.find((item)=>{ return (item.id===id)});
         if (item){

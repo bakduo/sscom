@@ -1,8 +1,8 @@
 import GenericDAO from "./generic.mjs";
 
-import UserDTO from "../dto/user.mjs";
+import CredentialDTO from "../dto/credential.mjs";
 
-export default class UserDAO extends GenericDAO {
+export default class CredentialDAO extends GenericDAO {
     
     #sas
 
@@ -11,40 +11,32 @@ export default class UserDAO extends GenericDAO {
         this.#sas = storageStragegy;
     }
 
-    save = async ({name, surname, age, email}) => {
+    save = async ({email,password}) => {
         try {
-            if (UserDTO.validate({name, surname, age, email})){
-                const userJson = new UserDTO({name, surname, age, email}).toJson();
+            if (CredentialDTO.validate({email,password})){
+                const userJson = new CredentialDTO({email,password}).toJson();
                 await this.#sas.save(userJson);
                 return userJson;
             }
-            throw new Error(`User invalid`);
+            throw new Error(`Credential invalid`);
         } catch (error) {
             throw new Error(`Error to process save ${error.message}`);
         }
     }
 
-    findByEmail = async (email) => {
-        const user = await this.#sas.findByParam('email',email);
-        if (user){
-            return user;
-        }
-        return false;
-    }
-
     findOne = async (id) => {
         const user = await this.#sas.findOne(id);
         if (user){
-            return new UserDTO(user).toJson();
+            return new CredentialDTO(user).toJson();
         }
         return false
     }
 
-    updateOne= async (id,{name, surname, age, email}) => {
+    updateOne= async (id,{email,password}) => {
         try {
-            if (UserDTO.validate({name, surname, age, email})){
-                const user  = await this.#sas.updateOne(id,{name, surname, age, email});
-                return new UserDTO(user).toJson();
+            if (UserDTO.validate({email,password})){
+                const user  = await this.#sas.updateOne(id,{email,password});
+                return new CredentialDTO(user).toJson();
             }
             throw new Error(`Update invalid`);
         } catch (error) {
@@ -69,8 +61,8 @@ export default class UserDAO extends GenericDAO {
     getAll = async () => {
         const items = await this.#sas.getAll();
         const allUsers = items.map((item)=>{
-            const {name, surname, age, email} = item;
-            const newUser = new UserDTO({name, surname, age, email}).toJson();
+            const {email,password} = item;
+            const newUser = new CredentialDTO({email,password}).toJson();
             return newUser;
         });
         

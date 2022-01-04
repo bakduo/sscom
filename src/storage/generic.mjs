@@ -12,6 +12,10 @@ export default class GenericStorage {
         throw new Error('Implement concrete class');
     }
 
+    findByParam = async (param,value) => {
+        throw new Error('Implement concrete class');
+    }
+
     updateOne = async (key,body)=>{
         throw new Error('Implement concrete class');
     }
