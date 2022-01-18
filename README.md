@@ -1,14 +1,19 @@
-Signal Server communication
-=========
+# Proyecto SSCOM
 
-# ROADMAP
+## User API
 
- - [ ] Support Websocket
- - [ ] Auth Token
- - [x] Framwork Express
- - [x] NodeJS module not commonjs
- - [ ] support mongo backend DB
- - [ ] support conectivity Web-Extension Firefox
- - [ ] storage S3 for transfer data
- - [ ] support container
- - [ ] edge connectivity
+- [x] CRUD USER
+- [x] Testing Login
+- [x] Model for credential and user.
+- [x] Endpoint Login
+- [x] OpenAPI
+- [X] Dockerfile
+- [ ] storage Mongo.
+- [X] storage memory.
+- [X] JWT secure
+- [X] Authorization + Authentication.
+
+
+Necesario tener inject config/environment.json y estructura folder data/store.json
+
+## Signal new server
