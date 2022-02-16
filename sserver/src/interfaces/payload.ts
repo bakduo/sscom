@@ -1,7 +1,9 @@
 
+
+
 export interface IMessage {
     op:string;
-    body?:object;
+    body?:any;
   }
   
 export interface IPayloadMessage{

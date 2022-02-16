@@ -1,13 +1,69 @@
+import { encrypt } from './../initconfig/configure';
+import { IPayloadMessage } from './../interfaces/payload';
 import { CustomWebSocket } from "../interfaces";
-import { IPayloadMessage } from '../interfaces/payload';
 import { WebSocketServer } from 'ws';
-
+import { IHashCiper } from '../utils/cipher';
 
 export interface IOperationSocket {
     
     getName():string;
 
-    exec(client:CustomWebSocket,server?:WebSocketServer):void;
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any):void;
+}
+
+interface ISendPayload {
+    send(message:IPayloadMessage,ws:CustomWebSocket):void;
+}
+
+interface IReceivePayload {
+    receive(message:string):IPayloadMessage;
+}
+
+export class SendPayload implements ISendPayload {
+
+    private static instance: SendPayload;
+
+    public static getInstance(): SendPayload {
+        if (!SendPayload.instance) {
+            SendPayload.instance = new SendPayload();
+        }
+
+        return SendPayload.instance;
+    }
+    
+    send(message: IPayloadMessage,ws:CustomWebSocket): void {
+    
+        const encode = encrypt.encrypt(JSON.stringify(message));
+
+        ws.send(Buffer.from(JSON.stringify(encode)).toString('base64'), { binary: false});
+
+
+    } 
+}
+
+export class ReceivePayload implements IReceivePayload {
+
+    private static instance: ReceivePayload;
+
+    public static getInstance(): ReceivePayload {
+        if (!ReceivePayload.instance) {
+            ReceivePayload.instance = new ReceivePayload();
+        }
+
+        return ReceivePayload.instance;
+    }
+
+    receive(message: string): IPayloadMessage {
+
+        const encode = Buffer.from(message, 'base64').toString('utf-8');
+
+        const payloadEnc = JSON.parse(encode) as IHashCiper;
+
+        const payloadDec = JSON.parse(encrypt.decrypt(payloadEnc)) as IPayloadMessage;
+
+        return payloadDec;
+        
+    }
 
 }
 
@@ -94,11 +150,11 @@ export class BroadcastCmd implements IOperationSocket {
         this.name = 'Broadcast';
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer): void {
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any): void {
         console.log("Execute ope: ",this.name);
         
         if (!!server) {
-            this.forward(server);
+            this.forward(server,body);
         }
         
     }
@@ -107,17 +163,23 @@ export class BroadcastCmd implements IOperationSocket {
         return this.name;
     }
 
-    forward(server:WebSocketServer): void {
+    forward(server:WebSocketServer,body:object): void {
 
         server.clients.forEach(function each(ws:CustomWebSocket) {
+
+            console.log(body);
 
             if (ws.isAlive){
                 const payload={
                     message:{
-                        op:"hello"
+                        op:"response",
+                        body:{
+                            capture:true
+                        }
                     }
                 };
-                ws.send(Buffer.from(JSON.stringify(payload)).toString('base64'), { binary: false});
+
+                SendPayload.getInstance().send(payload,ws);
             }
              
           });

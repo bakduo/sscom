@@ -4,7 +4,7 @@ import { IPayloadMessage, IMessage, IExceptionExec } from './interfaces/payload'
 import { createServer, IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
-import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd } from './command/IOperation';
+import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd, ReceivePayload } from './command/IOperation';
 
 // const serverHttps = createServer({
 //    cert: fs.readFileSync('./config/certs/server.crt'),
@@ -19,6 +19,7 @@ managerOp.addOperation(new FinishCmd());
 managerOp.addOperation(new FakeCmd());
 managerOp.addOperation(new BroadcastCmd());
 
+const receivePayload = ReceivePayload.getInstance();
 
 function checkConnectionSocket(info:any,callback:CallableFunction){
   console.log("checkConnectionSocker");
@@ -39,9 +40,6 @@ const wss = new WebSocketServer(ServerOptionsTest);
 
 wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
 
-
-  //console.log(req);
-
   console.log(req.socket.remoteAddress);
 
   connection.isAlive = true;
@@ -50,16 +48,13 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
 
       console.log("Desde pong");
 
-      //console.log(data);
   });
 
   connection.on('message', function message(payload, isBinary) {
     
     const message = isBinary ? payload : payload.toString();
 
-    const json = Buffer.from(message.toString(), 'base64').toString('utf-8');
-
-    const payloadObj: IPayloadMessage = JSON.parse(json) as IPayloadMessage;
+    const payloadObj: IPayloadMessage = receivePayload.receive(message.toString());
 
     if (payloadObj.message){
 
@@ -68,7 +63,7 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
       const oper:IOperationSocket = managerOp.get(op);
 
       try {
-        oper.exec(connection,wss);
+        oper.exec(connection,wss,body);
       } catch (error:unknown) {
         const merror = error as IExceptionExec;
         console.log(merror.message);
