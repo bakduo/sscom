@@ -1,10 +1,13 @@
+import { ClientConsumer } from './utils/consumer';
 import { CustomWebSocket } from './interfaces/socket';
 import { IPayloadMessage, IMessage, IExceptionExec } from './interfaces/payload';
 //import { createServer } from 'https';
 import { createServer, IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
-import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd, ReceivePayload } from './command/IOperation';
+import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd } from './command/IOperation';
+import { appconfig } from './initconfig/configure';
+
 
 // const serverHttps = createServer({
 //    cert: fs.readFileSync('./config/certs/server.crt'),
@@ -15,11 +18,11 @@ const serverHttp = createServer();
 
 const managerOp = new ManagerOperation();
 
+const clientRemote = new ClientConsumer();
+
 managerOp.addOperation(new FinishCmd());
 managerOp.addOperation(new FakeCmd());
 managerOp.addOperation(new BroadcastCmd());
-
-const receivePayload = ReceivePayload.getInstance();
 
 function checkConnectionSocket(info:any,callback:CallableFunction){
   console.log("checkConnectionSocker");
@@ -40,6 +43,8 @@ const wss = new WebSocketServer(ServerOptionsTest);
 
 wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
 
+  //console.log(req.rawHeaders);
+
   console.log(req.socket.remoteAddress);
 
   connection.isAlive = true;
@@ -54,25 +59,26 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
     
     const message = isBinary ? payload : payload.toString();
 
-    const payloadObj: IPayloadMessage = receivePayload.receive(message.toString());
+    const receive = clientRemote.generate(message.toString());
+
+    receive.setPayload(clientRemote.getPayload(message.toString()));
+
+    const payloadObj: IPayloadMessage = receive.decodePayload();
 
     if (payloadObj.message){
 
-      const {op,body} = payloadObj.message as IMessage;
+      const {op,body,client} = payloadObj.message as IMessage;
 
       const oper:IOperationSocket = managerOp.get(op);
 
       try {
-        oper.exec(connection,wss,body);
-      } catch (error:unknown) {
+        oper.exec(connection,wss,body,client);
+      }catch (error:unknown) {
         const merror = error as IExceptionExec;
         console.log(merror.message);
       }
-      
     }
-
     
-
   });
 
 })
@@ -99,4 +105,6 @@ wss.on('close', function close(code:any, data:any) {
   clearInterval(interval);
 });
 
-serverHttp.listen(8000);
+serverHttp.listen(appconfig.port,function(){
+  console.log(`Listen ${appconfig.port}`);
+});

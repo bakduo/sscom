@@ -1,6 +1,6 @@
-import { encrypt } from './../initconfig/configure';
+import { encrypt, encryptBrowser } from './../initconfig/configure';
 import { IPayloadMessage } from './../interfaces/payload';
-import { CustomWebSocket } from "../interfaces";
+import { CustomWebSocket, IResponseClient } from "../interfaces";
 import { WebSocketServer } from 'ws';
 import { IHashCiper } from '../utils/cipher';
 
@@ -8,64 +8,175 @@ export interface IOperationSocket {
     
     getName():string;
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any):void;
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string):void;
 }
 
-interface ISendPayload {
-    send(message:IPayloadMessage,ws:CustomWebSocket):void;
+export interface ISendPayload {
+    send(payload:IPayloadMessage,ws:CustomWebSocket):void;
 }
 
-interface IReceivePayload {
-    receive(message:string):IPayloadMessage;
+export interface IReceivePayload<T> {
+
+    decodePayload():IPayloadMessage;
+    setPayload(message:T):void;
 }
 
-export class SendPayload implements ISendPayload {
+export class SendPayloadDefault implements ISendPayload {
 
-    private static instance: SendPayload;
+    private static instance: SendPayloadDefault;
 
-    public static getInstance(): SendPayload {
-        if (!SendPayload.instance) {
-            SendPayload.instance = new SendPayload();
+    public static getInstance(): SendPayloadDefault {
+        if (!SendPayloadDefault.instance) {
+            SendPayloadDefault.instance = new SendPayloadDefault();
         }
 
-        return SendPayload.instance;
+        return SendPayloadDefault.instance;
     }
     
     send(message: IPayloadMessage,ws:CustomWebSocket): void {
     
-        const encode = encrypt.encrypt(JSON.stringify(message));
+        const encryptedPayload = encrypt.encrypt(JSON.stringify(message));
 
-        ws.send(Buffer.from(JSON.stringify(encode)).toString('base64'), { binary: false});
+        const endode = Buffer.from(JSON.stringify({"payload":encryptedPayload,"type":"default"})).toString('base64');
+
+        ws.send(endode, { binary: false});
+
+    } 
+}
+
+const getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key:any, value:any) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+};
+
+
+export class SendPayloadBrowser implements ISendPayload {
+
+    private static instance: SendPayloadBrowser;
+
+    public static getInstance(): SendPayloadBrowser {
+        if (!SendPayloadBrowser.instance) {
+            SendPayloadBrowser.instance = new SendPayloadBrowser();
+        }
+
+        return SendPayloadBrowser.instance;
+    }
+    
+    send(payload: IPayloadMessage,ws:CustomWebSocket): void {
+
+        const { message } = payload;
+        
+        const encryptPayload = encryptBrowser.encrypt(JSON.stringify(message,getCircularReplacer()));
+
+        ws.send(Buffer.from(JSON.stringify({
+             "payload":encryptPayload,
+             "type":"browser"
+        },getCircularReplacer())).toString('base64'), { binary: false});
 
 
     } 
 }
 
-export class ReceivePayload implements IReceivePayload {
+export class ReponsePayload implements IResponseClient {
 
-    private static instance: ReceivePayload;
+    private static instance: ReponsePayload;
 
-    public static getInstance(): ReceivePayload {
-        if (!ReceivePayload.instance) {
-            ReceivePayload.instance = new ReceivePayload();
+    public static getInstance(): ReponsePayload {
+        if (!ReponsePayload.instance) {
+            ReponsePayload.instance = new ReponsePayload();
         }
 
-        return ReceivePayload.instance;
+        return ReponsePayload.instance;
     }
 
-    receive(message: string): IPayloadMessage {
+    generate(client: string): ISendPayload {
+        switch (client) {
+            case "webextension":
+                return SendPayloadBrowser.getInstance();
+            default:
+                return SendPayloadDefault.getInstance();
+        }
+    }
+}
 
-        const encode = Buffer.from(message, 'base64').toString('utf-8');
 
-        const payloadEnc = JSON.parse(encode) as IHashCiper;
+export class ReceivePayloadDefault implements IReceivePayload<IHashCiper> {
 
-        const payloadDec = JSON.parse(encrypt.decrypt(payloadEnc)) as IPayloadMessage;
+    private static instance: ReceivePayloadDefault;
+    
+    _message : IHashCiper;
+    
+    constructor(){
+        this._message = {iv:'',content:''};
+    }
+
+    setPayload(message: IHashCiper): void {
+        this._message = message;
+    }
+
+    public static getInstance(): ReceivePayloadDefault {
+        if (!ReceivePayloadDefault.instance) {
+            ReceivePayloadDefault.instance = new ReceivePayloadDefault();
+        }
+
+        return ReceivePayloadDefault.instance;
+    }
+
+    decodePayload(): IPayloadMessage {
+
+        const payloadDec = JSON.parse(encrypt.decrypt(this._message)) as IPayloadMessage;
+
+        console.log(payloadDec);
 
         return payloadDec;
         
     }
 
 }
+
+export class ReceivePayloadBrowser implements IReceivePayload<string> {
+    
+
+    private static instance: ReceivePayloadBrowser;
+
+    _message:string;
+
+    constructor(){
+        this._message = '';
+    }
+
+    public static getInstance(): ReceivePayloadBrowser {
+        if (!ReceivePayloadBrowser.instance) {
+            ReceivePayloadBrowser.instance = new ReceivePayloadBrowser();
+        }
+
+        return ReceivePayloadBrowser.instance;
+    }
+
+    setPayload(message: string): void {
+        this._message = message;
+    }
+
+    decodePayload(): IPayloadMessage {
+
+        const postDecode = encryptBrowser.decrypt(this._message);
+
+        const payloadDec = JSON.parse(postDecode) as IPayloadMessage;
+
+        return payloadDec;
+        
+    }
+
+}
+
 
 interface IOperationNotExist {
     status?:string;
@@ -150,11 +261,11 @@ export class BroadcastCmd implements IOperationSocket {
         this.name = 'Broadcast';
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any): void {
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
         console.log("Execute ope: ",this.name);
         
         if (!!server) {
-            this.forward(server,body);
+            this.forward(server,body,remote || "nobody");
         }
         
     }
@@ -163,23 +274,26 @@ export class BroadcastCmd implements IOperationSocket {
         return this.name;
     }
 
-    forward(server:WebSocketServer,body:object): void {
+    forward(server:WebSocketServer,body:any,remote:string): void {
 
         server.clients.forEach(function each(ws:CustomWebSocket) {
 
-            console.log(body);
+            console.log(body,remote);
 
             if (ws.isAlive){
-                const payload={
+            
+                const response = ReponsePayload.getInstance().generate(remote);
+
+                response.send({
                     message:{
                         op:"response",
                         body:{
                             capture:true
-                        }
+                        },
+                        client:remote
                     }
-                };
+                },ws);
 
-                SendPayload.getInstance().send(payload,ws);
             }
              
           });

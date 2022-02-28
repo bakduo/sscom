@@ -23,10 +23,12 @@ Necesario tener inject config/environment.json y estructura folder data/store.js
 
 ## Signal server
 
-- [x] Typescript
-- [x] WS
+- [X] Typescript
+- [X] WS
+- [X] support encrypt/decrypt with browser and client desktop or service 
 - [] token
-- [] browser
+- [X] browser
+- [X] support interaction web-extension
 
 This project in current Development
 
