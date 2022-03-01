@@ -71,3 +71,5 @@ img/
 sserver/client
 sserver/config
 */node_modules
+service-user/config
+service-user/data

@@ -6,10 +6,11 @@
 - [x] Endpoint Login
 - [x] OpenAPI
 - [X] Dockerfile
-- [ ] storage Mongo.
+- [X] storage Mongo.
 - [X] storage memory.
 - [X] JWT secure
 - [X] Authorization + Authentication.
+- [X] config parameter.
 
 # User-API
 

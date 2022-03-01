@@ -13,6 +13,7 @@ describe('LoginbController', () => {
   let userfakelogin2: Userlogin;
   let tokenTest = '';
 
+
   before('setupApplication', async () => {
     ({app, client} = await setupApplication());
 
@@ -75,7 +76,7 @@ describe('LoginbController', () => {
 
   it('Disable user admin', async () => {
 
-    const res = await client.post('/api/disable').send({email:userfakelogin.email}).expect(200);
+    const res = await client.post('/api/disable').set('Authorization',`Bearer ${tokenTest}`).send({email:userfakelogin.email}).expect(200);
     expect(res.body).to.be.Object();
     expect(res.body).to.containEql({email: "8y6eezWBTg@domain.tld",status:true});
 
@@ -110,9 +111,7 @@ describe('LoginbController', () => {
 
   it('Disable user', async () => {
 
-    const res = await client.post('/api/disable').send({email:userfakelogin2.email}).expect(200);
-    expect(res.body).to.be.Object();
-    expect(res.body).to.containEql({email: "Cw8TXUs5Mw@domain.tld",status:true});
+    const res = await client.post('/api/disable').send({email:userfakelogin2.email}).expect(401);
 
   });
 

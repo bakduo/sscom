@@ -1,14 +1,14 @@
+import config from 'config';
 import crypto from 'crypto';
+import {IConfigApp} from '../models/configure';
 
-const configLoad = require('config');
+const configEnv:IConfigApp = config.get('app');
 
-export const appConfigEnv = configLoad.get('app');
+const secretTokenRefresh = configEnv.jwtSecretRefresh ?? crypto.randomBytes(32).toString('hex');
 
-const secretTokenRefresh = appConfigEnv.jwt_secret_refresh ?? crypto.randomBytes(32).toString('hex');
+const secretToken = configEnv.jwtSecret ?? crypto.randomBytes(32).toString('hex');
 
-const secretToken = appConfigEnv.jwt_secret ?? crypto.randomBytes(32).toString('hex');
-
-const timeToken =  appConfigEnv.time_token ?? '3600';
+const timeToken =  configEnv.timeToken ?? '3600';
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = secretToken;

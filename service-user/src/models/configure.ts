@@ -1,0 +1,23 @@
+export interface IConfigApp {
+    port:number;
+    site:string;
+    protocol:string;
+    client:{
+      host:string;
+      port:string;
+    },
+    jwtSecretRefresh:string;
+    jwtSecret:string;
+    timeToken:string;
+    admintoken:string;
+    db:{
+     env:{
+       url:string;
+       host:string;
+       port:number;
+       user:string;
+       password:string;
+       database:string;
+     }
+    }
+}

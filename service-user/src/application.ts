@@ -18,17 +18,12 @@ import {MySequence} from './sequence';
 import {JWTCustomService} from './services/jwt.service';
 import {MyCustomService} from './services/myservice.service';
 
-const configLoad = require('config');
-
-export const appConfigEnv = configLoad.get('app');
-
 export {ApplicationConfig};
 
 export class UserapiApplication extends BootMixin(
 
   ServiceMixin(RepositoryMixin(RestApplication)),
 ) {
-
 
   constructor(options: ApplicationConfig = {}) {
     super(options);

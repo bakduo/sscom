@@ -1,16 +1,16 @@
 // Uncomment these imports to begin using these cool features!
-
 // import {inject} from '@loopback/core';
 import {authenticate} from '@loopback/authentication';
 import {TokenServiceBindings} from '@loopback/authentication-jwt';
 import {authorize} from '@loopback/authorization';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getModelSchemaRef, HttpErrors, param, post, requestBody, response} from '@loopback/rest';
+import {get, getModelSchemaRef, HttpErrors, param, post, Request, requestBody, response, RestBindings} from '@loopback/rest';
 import {genSalt, hash} from 'bcryptjs';
+import config from 'config';
 import _ from 'lodash';
 import {controlRole} from '../middlewares/auth';
-import {Credential} from '../models';
+import {Credential, IConfigApp} from '../models';
 import {Userlogin} from '../models/userlogin.model';
 import {Usersignup} from '../models/usersignup.model';
 import {UserServiceBindings} from '../namespaces/custom.namespaces';
@@ -18,6 +18,8 @@ import {UsercustomRepository} from '../repositories/usercustom.repository';
 import {JWTCustomService} from '../services/jwt.service';
 import {MyCustomService} from '../services/myservice.service';
 
+
+const configEnv:IConfigApp = config.get('app');
 
 @model()
 export class SignUserResponse {
@@ -77,7 +79,8 @@ export class LoginController {
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: MyCustomService,
     @repository(UsercustomRepository)
-    public usercustomRepository : UsercustomRepository) {}
+    public usercustomRepository : UsercustomRepository,
+    @inject(RestBindings.Http.REQUEST) private req: Request) {}
 
   @post('/api/login')
   @response(200, {
@@ -128,22 +131,68 @@ export class LoginController {
       },
     })
     usersignup: Usersignup,
+    @param.header.string('x-signup-header') signHeader: string
   ): Promise<SignUserResponse> {
 
     const password = await hash(usersignup.password, await genSalt());
 
-    const savedUser = await this.usercustomRepository.create(
-      _.omit(usersignup, 'password'),);
+    //console.log(this.req.headers);
 
-    await this.usercustomRepository.credential(savedUser.id).create(
-      {email:usersignup.email,password:password
-      });
+    if (!signHeader){
+      throw new HttpErrors.Conflict("Operation required a flag");
+    }
 
-    return {email:usersignup.email,status:true}
+    const tokenAdmin = signHeader.split('=') || [];
+
+    if (tokenAdmin.length===0){
+      throw new HttpErrors.Conflict("Operation not permit");
+    }
+
+    try {
+
+      if (usersignup.roles){
+        if (usersignup.roles.every((item)=>{
+          return (['admin'].includes(item))
+        })){
+
+          if (tokenAdmin[1]===configEnv.admintoken){
+
+            const savedUser = await this.usercustomRepository.create(
+              _.omit(usersignup, 'password'),);
+
+            await this.usercustomRepository.credential(savedUser.id).create(
+              {email:usersignup.email,password:password
+              });
+            return {email:usersignup.email,status:true}
+          }
+
+        }else{
+          if (usersignup.roles.every((item)=>{
+            return (['user'].includes(item))
+          })){
+            const savedUser = await this.usercustomRepository.create(
+              _.omit(usersignup, 'password'),);
+
+            await this.usercustomRepository.credential(savedUser.id).create(
+              {email:usersignup.email,password:password
+              });
+            return {email:usersignup.email,status:true}
+          }
+        }
+      }
+    } catch (error) {
+      throw new HttpErrors.Conflict("Operation not permit");
+    }
+
+    throw new HttpErrors.Conflict("Operation not permit without roles");
   }
 
 
-
+  @authenticate('jwt')
+  @authorize({
+    allowedRoles: ['admin'],
+    voters: [controlRole],
+  })
   @post('/api/disable')
   @response(200, {
     description: 'Usercustom model instance',

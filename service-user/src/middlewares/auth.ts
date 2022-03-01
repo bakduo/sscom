@@ -36,7 +36,6 @@ export async function controlRole(
     return AuthorizationDecision.ALLOW;
   }
 
-  //console.log(currentUser.roles);
   let roleIsAllowed = false;
   currentUser.roles.forEach((item:string) => {
     if (metadata.allowedRoles!.includes(item)){

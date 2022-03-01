@@ -2,11 +2,12 @@ import {
   Client, createRestAppClient,
   givenHttpServerConfig
 } from '@loopback/testlab';
+import config from 'config';
 import {UserapiApplication} from '../..';
+import {IConfigApp} from '../../models/configure';
 
-const configLoad = require('config');
+const configEnv:IConfigApp = config.get('app');
 
-export const appConfigEnv = configLoad.get('app');
 
 export async function setupApplication(): Promise<AppWithClient> {
   const restConfig = givenHttpServerConfig({
@@ -19,7 +20,9 @@ export async function setupApplication(): Promise<AppWithClient> {
 
   const app = new UserapiApplication({
     rest: restConfig,
+    custom: configEnv,
   });
+
 
   await app.boot();
   await app.start();
