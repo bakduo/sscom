@@ -15,6 +15,7 @@ export interface IHashCiper {
 export interface ICipherEnc <T> {
     encrypt(block:T):T;
     decrypt(block:T):T;
+    setConfig(config:ICipher):void;
 }
 
 export class CipherPayload implements ICipherEnc<IHashCiper | string> {
@@ -28,6 +29,10 @@ export class CipherPayload implements ICipherEnc<IHashCiper | string> {
         this.secretKey = config.secretKey;
         this.iv = crypto.randomBytes(16);
     }
+    setConfig(config: ICipher): void {
+        throw new Error('Method not implemented.');
+    }
+  
 
     encrypt = (block:string):IHashCiper => {
 
@@ -73,6 +78,9 @@ export class CipherBrowserPayload implements ICipherEnc<string> {
         this.algorithm = config.algorithm;
         this.secretKey = config.secretKey;
         this.iv = crypto.randomBytes(16);
+    }
+    setConfig(config: ICipher): void {
+        throw new Error('Method not implemented.');
     }
 
     encrypt = (block:string):any => {
