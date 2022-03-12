@@ -3,6 +3,8 @@ import { IPayloadMessage } from './../interfaces/payload';
 import { CustomWebSocket, IResponseClient } from "../interfaces";
 import { WebSocketServer } from 'ws';
 import { IHashCiper } from '../utils/cipher';
+import { MessagePayload, MessageType } from '../payload/message';
+import { PayloadMessageDTO } from '../dto/payload';
 
 export interface IOperationSocket {
     
@@ -12,7 +14,7 @@ export interface IOperationSocket {
 }
 
 export interface ISendPayload {
-    send(payload:IPayloadMessage,ws:CustomWebSocket):void;
+    send(payload:PayloadMessageDTO,ws:CustomWebSocket):void;
 }
 
 export interface IReceivePayload<T> {
@@ -33,11 +35,13 @@ export class SendPayloadDefault implements ISendPayload {
         return SendPayloadDefault.instance;
     }
     
-    send(message: IPayloadMessage,ws:CustomWebSocket): void {
+    send(message: PayloadMessageDTO,ws:CustomWebSocket): void {
     
         const encryptedPayload = encrypt.encrypt(JSON.stringify(message));
 
-        const endode = Buffer.from(JSON.stringify({"payload":encryptedPayload,"type":"default"})).toString('base64');
+        const payloadSend = new MessageType(encryptedPayload,"default");
+
+        const endode = Buffer.from(payloadSend.toSerialize()).toString('base64');
 
         ws.send(endode, { binary: false});
 
@@ -70,18 +74,15 @@ export class SendPayloadBrowser implements ISendPayload {
         return SendPayloadBrowser.instance;
     }
     
-    send(payload: IPayloadMessage,ws:CustomWebSocket): void {
+    send(payload: PayloadMessageDTO,ws:CustomWebSocket): void {
 
         const { message } = payload;
         
         const encryptPayload = encryptBrowser.encrypt(JSON.stringify(message,getCircularReplacer()));
 
-        ws.send(Buffer.from(JSON.stringify({
-             "payload":encryptPayload,
-             "type":"browser"
-        },getCircularReplacer())).toString('base64'), { binary: false});
+        const payloadSend = new MessageType(encryptPayload,"browser");
 
-
+        ws.send(Buffer.from(payloadSend.toSerialize()).toString('base64'), { binary: false});
     } 
 }
 
@@ -284,15 +285,9 @@ export class BroadcastCmd implements IOperationSocket {
             
                 const response = ReponsePayload.getInstance().generate(remote);
 
-                response.send({
-                    message:{
-                        op:"response",
-                        body:{
-                            capture:true
-                        },
-                        client:remote
-                    }
-                },ws);
+                const payloadOb = new MessagePayload("response",{capture:true},remote);
+
+                response.send(payloadOb.buildPayload(),ws);
 
             }
              
