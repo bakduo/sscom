@@ -1,10 +1,9 @@
 import { encrypt, encryptBrowser } from './../initconfig/configure';
-import { IPayloadMessage } from './../interfaces/payload';
+import { IExceptionExec, IPayloadMessage } from './../interfaces/payload';
 import { CustomWebSocket, IResponseClient } from "../interfaces";
 import { WebSocketServer } from 'ws';
 import { IHashCiper } from '../utils/cipher';
 import { MessagePayload, MessageType } from '../payload/message';
-import { PayloadMessageDTO } from '../dto/payload';
 
 export interface IOperationSocket {
     
@@ -14,7 +13,7 @@ export interface IOperationSocket {
 }
 
 export interface ISendPayload {
-    send(payload:PayloadMessageDTO,ws:CustomWebSocket):void;
+    send(payload:string,ws:CustomWebSocket):void;
 }
 
 export interface IReceivePayload<T> {
@@ -35,9 +34,9 @@ export class SendPayloadDefault implements ISendPayload {
         return SendPayloadDefault.instance;
     }
     
-    send(message: PayloadMessageDTO,ws:CustomWebSocket): void {
+    send(message: string,ws:CustomWebSocket): void {
     
-        const encryptedPayload = encrypt.encrypt(JSON.stringify(message));
+        const encryptedPayload = encrypt.encrypt(message);
 
         const payloadSend = new MessageType(encryptedPayload,"default");
 
@@ -74,15 +73,20 @@ export class SendPayloadBrowser implements ISendPayload {
         return SendPayloadBrowser.instance;
     }
     
-    send(payload: PayloadMessageDTO,ws:CustomWebSocket): void {
+    send(message: string,ws:CustomWebSocket): void {
 
-        const { message } = payload;
-        
-        const encryptPayload = encryptBrowser.encrypt(JSON.stringify(message,getCircularReplacer()));
+        const encryptPayload = encryptBrowser.encrypt(message);
 
         const payloadSend = new MessageType(encryptPayload,"browser");
 
-        ws.send(Buffer.from(payloadSend.toSerialize()).toString('base64'), { binary: false});
+        try {
+            ws.send(Buffer.from(payloadSend.toSerialize()).toString('base64'), { binary: false});    
+        } catch (error:unknown) {
+            console.log("LA CAGO");
+            const merror = error as IExceptionExec;
+            throw new Error(`Error: ${merror.message}`);
+        }
+        
     } 
 }
 
@@ -134,8 +138,6 @@ export class ReceivePayloadDefault implements IReceivePayload<IHashCiper> {
     decodePayload(): IPayloadMessage {
 
         const payloadDec = JSON.parse(encrypt.decrypt(this._message)) as IPayloadMessage;
-
-        console.log(payloadDec);
 
         return payloadDec;
         
@@ -220,8 +222,8 @@ export class FakeCmd implements IOperationSocket {
         this.name = 'FakeCmd'
     }
 
-    exec(client:CustomWebSocket): void {
-        console.log("Execute ope");
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+        console.log("Execute ope Fake command");
     }
 
     getName(): string {
@@ -279,15 +281,13 @@ export class BroadcastCmd implements IOperationSocket {
 
         server.clients.forEach(function each(ws:CustomWebSocket) {
 
-            console.log(body,remote);
-
             if (ws.isAlive){
             
                 const response = ReponsePayload.getInstance().generate(remote);
 
                 const payloadOb = new MessagePayload("response",{capture:true},remote);
 
-                response.send(payloadOb.buildPayload(),ws);
+                response.send(payloadOb.toSerialize(),ws);
 
             }
              
