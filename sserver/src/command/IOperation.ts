@@ -198,11 +198,11 @@ export class OperationNotExist implements IOperationSocket{
         this.message = _ope.message || '';
     }
     exec(client:CustomWebSocket): void {
-        throw new Error(`OperationNotExist: ${this.message}  ${this.code}`);
+        throw new Error(`OperationNotExist: ${this.message} ${this.code}`);
     }
 
     getName(): string {
-        throw new Error(`OperationNotExist: ${this.message}  ${this.code}`);
+        throw new Error(`OperationNotExist: ${this.message} ${this.code}`);
     }
 
 }
@@ -240,7 +240,7 @@ export class FinishCmd implements IOperationSocket {
         this.name = 'Finished'
     }
 
-    exec(client:CustomWebSocket): void {
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
         console.log("Execute ope", this.name);
         this.terminate(client);
     }
@@ -251,7 +251,10 @@ export class FinishCmd implements IOperationSocket {
 
     terminate(client:CustomWebSocket): void {
        if (client.isAlive){
-        client.terminate();
+          client.isAlive = false;
+          //client.terminate();
+          //https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
+          client.close(1001);
        }
     }
 }
@@ -295,12 +298,51 @@ export class BroadcastCmd implements IOperationSocket {
     }
 }
 
+export class JoinCmd implements IOperationSocket {
+    
+    name:string;
+
+    constructor(){
+        this.name = 'Join';
+    }
+
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+        console.log("Execute ope: ",this.name);
+        
+        if (!!server) {
+            this.forward(server,body,remote || "nobody");
+        }
+        
+    }
+
+    getName(): string {
+        return this.name;
+    }
+
+    forward(server:WebSocketServer,body:any,remote:string): void {
+
+        server.clients.forEach(function each(ws:CustomWebSocket) {
+
+            if (ws.isAlive){
+            
+                const response = ReponsePayload.getInstance().generate(remote);
+
+                const payloadOb = new MessagePayload("response",{capture:true},remote);
+
+                response.send(payloadOb.toSerialize(),ws);
+
+            }
+             
+          });
+    }
+}
+
 export class ManagerOperation implements IManagerOperation {
 
     operations: IOperationSocket[];
 
     constructor(){
-        this.operations = [];    
+        this.operations = [];
     }
 
     addOperation(operation: IOperationSocket): void {
