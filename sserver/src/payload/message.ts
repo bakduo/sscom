@@ -1,6 +1,19 @@
 import { PayloadMessageDTO } from '../dto/payload';
 import { IMessage, IMessageType } from '../interfaces/payload';
 
+const getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key:any, value:any) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+};
+
 export class MessagePayload implements IMessage {
     
     op: string;
@@ -31,7 +44,7 @@ export class MessagePayload implements IMessage {
                 body: this.body || {},
                 client: this.client || ''
             }
-        })
+        },getCircularReplacer())
     }
     
 }
@@ -50,7 +63,7 @@ export class MessageType implements IMessageType {
         {
             payload:this.payload,
             type:this.type
-        });
+        },getCircularReplacer());
     }
 
 }

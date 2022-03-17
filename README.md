@@ -39,6 +39,8 @@ Necesario tener inject config/environment.json y estructura folder data/store.js
 - [] token
 - [X] browser
 - [X] support interaction web-extension
+- [X] support log
+- [X] testing
 
 This project in current Development
 

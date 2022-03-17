@@ -47,20 +47,6 @@ export class SendPayloadDefault implements ISendPayload {
     } 
 }
 
-const getCircularReplacer = () => {
-    const seen = new WeakSet();
-    return (key:any, value:any) => {
-      if (typeof value === "object" && value !== null) {
-        if (seen.has(value)) {
-          return;
-        }
-        seen.add(value);
-      }
-      return value;
-    };
-};
-
-
 export class SendPayloadBrowser implements ISendPayload {
 
     private static instance: SendPayloadBrowser;
@@ -306,11 +292,28 @@ export class JoinCmd implements IOperationSocket {
         this.name = 'Join';
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+    //TODO USER check
+    checkToken(token:string):Promise<boolean>{
+        return Promise.resolve(true);
+    }
+
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
+        
         console.log("Execute ope: ",this.name);
         
-        if (!!server) {
-            this.forward(server,body,remote || "nobody");
+        const {user,tokenid} = body;
+
+        const ok = await this.checkToken(tokenid);
+        if (ok && remote){
+            
+            const response = ReponsePayload.getInstance().generate(remote);
+
+            const payloadObj = new MessagePayload("Join",{status:ok,detail:''},remote);
+            
+            //SendPayloadBrowser.getInstance().send(payloadObj.toSerialize(),client);
+
+            response.send(payloadObj.toSerialize(),client);
+
         }
         
     }

@@ -1,28 +1,27 @@
-//import { expect } from 'chai';
 import * as chai from 'chai';
-import { NodeMemoryDAO } from '../src/dao/node-memory';
-import { INode } from '../src/dao/node';
+import { v4 as uuidv4 } from 'uuid';
+import { NodeDTO } from '../src/dto/node';
+import { nodeDAO } from '../src/initconfig/configure';
 
-const nodeDAO = new NodeMemoryDAO();
 
 const expect = chai.expect;
-
-const should = chai.should();
 
 
 describe('Test NodeMemory for Browser UNIT',async () => {
 
+
+    let listaNodes:NodeDTO[];
 
     before(async function(){
 
         console.log("###############BEGIN TEST NodeMemory#################");
         
         Promise.all([
-        nodeDAO.saveOne({name:'node1'}),
-        nodeDAO.saveOne({name:'node2'}),
-        nodeDAO.saveOne({name:'node3'}),
-        nodeDAO.saveOne({name:'node4'}),
-        nodeDAO.saveOne({name:'node5'}),
+        nodeDAO.saveOne({uuid:uuidv4()}),
+        nodeDAO.saveOne({uuid:uuidv4()}),
+        nodeDAO.saveOne({uuid:uuidv4()}),
+        nodeDAO.saveOne({uuid:uuidv4()}),
+        nodeDAO.saveOne({uuid:uuidv4()}),
         ]);
 
     });
@@ -36,40 +35,42 @@ describe('Test NodeMemory for Browser UNIT',async () => {
 
         it('Debería agregar un nodo', async () => {
 
-            const item:INode = await nodeDAO.saveOne({name:'node6'});
+            const orig = uuidv4();
+            const item= await nodeDAO.saveOne({uuid:orig});
             expect(item).to.be.an('object');
-            expect(item).to.have.property('name');
-            expect(item.name).to.equal('node6');
+            expect(item).to.have.property('uuid');
+            expect(item.uuid).to.equal(orig);
         });
 
         it('Debería listart todo', async () => {
 
-            const items = await nodeDAO.getAll();
-            expect(items).to.be.an('array');
-            expect(items).to.length(6);
+            listaNodes = await nodeDAO.getAll();
+            expect(listaNodes).to.be.an('array');
+            expect(listaNodes).to.length(6);
         });
         
         it('Debería eliminar un nodo', async () => {
 
-            const ok = await nodeDAO.deleteOne({keycustom:'name',valuecustom:'node3'});
+            const ok = await nodeDAO.deleteOne({keycustom:'uuid',valuecustom:listaNodes[2].uuid});
             expect(ok).to.be.an('boolean');
             expect(ok).to.equal(true);
         });
 
         it('Debería buscar un nodo', async () => {
 
-            const node = await nodeDAO.findOne({keycustom:'name',valuecustom:'node4'});
+            const node = await nodeDAO.findOne({keycustom:'uuid',valuecustom:listaNodes[3].uuid});
             expect(node).to.be.an('object');
-            expect(node).to.have.property('name');
-            expect(node.name).to.equal('node4');
+            expect(node).to.have.property('uuid');
+            expect(node.uuid).to.equal(listaNodes[3].uuid);
         });
 
         it('Debería actualizar un nodo', async () => {
 
-            const node = await nodeDAO.updateOne("node5",{name:'node999'});
+            const newNode = uuidv4();
+            const node = await nodeDAO.updateOne(listaNodes[3].uuid,{uuid:newNode});
             expect(node).to.be.an('object');
-            expect(node).to.have.property('name');
-            expect(node.name).to.equal('node999');
+            expect(node).to.have.property('uuid');
+            expect(node.uuid).to.equal(newNode);
         });
         
 
