@@ -68,7 +68,6 @@ export class SendPayloadBrowser implements ISendPayload {
         try {
             ws.send(Buffer.from(payloadSend.toSerialize()).toString('base64'), { binary: false});    
         } catch (error:unknown) {
-            console.log("LA CAGO");
             const merror = error as IExceptionExec;
             throw new Error(`Error: ${merror.message}`);
         }

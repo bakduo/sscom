@@ -6,9 +6,9 @@ import { createServer, IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd } from './command/IOperation';
-import { appconfig } from './initconfig/configure';
+import { appconfig, loggerApp } from './initconfig/configure';
 
-
+//TODO SECURE CERTIFY
 // const serverHttps = createServer({
 //    cert: fs.readFileSync('./config/certs/server.crt'),
 //    key: fs.readFileSync('./config/certs/server.key')
@@ -45,18 +45,12 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
 
   //console.log(req.rawHeaders);
 
-  console.log(req.socket.remoteAddress);
+  //console.log(req.socket.remoteAddress);
 
   connection.isAlive = true;
-
-  connection.on('pong', function(data:any){
-
-      console.log("Desde pong");
-
-  });
-
+  
   connection.on('message', function message(payload, isBinary) {
-    
+ 
     const message = isBinary ? payload : payload.toString();
 
     const receive = clientRemote.generate(message.toString());
@@ -75,16 +69,47 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
         oper.exec(connection,wss,body,client);
       }catch (error:unknown) {
         const merror = error as IExceptionExec;
-        console.log(merror.message);
+        loggerApp.error(merror.message);
       }
     }
     
   });
 
+  connection.on('error', function (message:IExceptionExec) {
+
+    switch (message.name) {
+      case 'RangeError':
+        connection.exception = {
+          enable: true,
+          name: 'RangeError',
+          message: `${message.message}`
+        };
+        break;
+    }
+
+  });
+
+  connection.on('pong', function(data:any){
+
+    console.log("Desde pong");
+
+  });
+
+  connection.on('close', function(code:any, data:any){
+
+    if (connection.exception?.enable){
+
+      loggerApp.info(`Cierre de conexión por: ${connection.exception.message} codigo server: ${code}`);
+    }
+    
+
+  });
+
+
 })
 
-wss.on('error', function (message) {
-  console.log("message from error"); 
+wss.on('error', function (message:IExceptionExec) {
+  loggerApp.error(`message from error ${message}`);
 });
 
 const interval = setInterval(function checkAlive() {
@@ -99,7 +124,7 @@ const interval = setInterval(function checkAlive() {
 }, 21000);
 
 wss.on('close', function close(code:any, data:any) {
-  console.log(code);
+  loggerApp.info(code);
   const reason = data.toString();
   // Continue as before.
   clearInterval(interval);
