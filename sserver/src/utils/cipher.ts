@@ -56,8 +56,6 @@ export class CipherPayload implements ICipherEnc<IHashCiper | string> {
     };
     
     decrypt = (block:IHashCiper):string => {
-
-        console.log(block);
     
         const decipher = crypto.createDecipheriv(this.algorithm, Buffer.from(this.secretKey), Buffer.from(block.iv, 'hex'));
     
