@@ -1,8 +1,8 @@
 import config from 'config';
-import MongoConnect from '../datastore/wmongo';
 import pino from "pino";
 import stream from 'stream';
 import childProcess from 'child_process';
+import { FUserDAO, FTokenDAO } from '../dao/fdao';
 
 const logThrough = new stream.PassThrough();
 
@@ -58,14 +58,19 @@ export const ERRORS_APP = {
         code: 1003,
         HttpStatusCode: 401
     },
+    'EInvalidUserForCreation':{
+        detail:'Invalid user body',
+        code: 1004,
+        HttpStatusCode: 400
+    },
     'ESaveUser':{
         detail:'Exception on save user into datastore',
-        code: 1004,
+        code: 1005,
         HttpStatusCode: 500
     },
     'EFindUser':{
         detail:'Exception on findone on datastore',
-        code: 1005,
+        code: 1006,
         HttpStatusCode: 500
     },
     'EBase':{
@@ -98,13 +103,15 @@ export interface IConfigDB {
     secure:boolean;
     protocol:string;
     logpath:string;
+    persistence:{
+        type:string;
+        mongo:boolean;
+        memory:boolean;
+    }
 }
 
 export const appconfig:IConfigDB = config.get('app');
 
-export const connectionDB = MongoConnect.getInstance(
-    appconfig.db.mongo.url,
-    appconfig.db.mongo.user,
-    appconfig.db.mongo.password,
-    appconfig.db.mongo.dbname,
-    appconfig.db.mongo.secure).getConnection();
+export const userDAO = FUserDAO.getInstance(appconfig.persistence.type).build();
+
+export const tokenDAO = FTokenDAO.getInstance(appconfig.persistence.type).build();

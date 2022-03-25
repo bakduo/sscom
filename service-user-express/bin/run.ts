@@ -1,4 +1,5 @@
-import { appconfig, connectionDB, loggerApp } from "../src/init/configure";
+import MongoConnect from "../src/datastore/wmongo";
+import { appconfig, loggerApp } from "../src/init/configure";
 import { app } from "../src/main";
 
 const puerto = appconfig.port || 8080;
@@ -13,9 +14,22 @@ server.on('error', error => {
 
 process.on('SIGINT', function() {
 
-    connectionDB.close(function(err:unknown) {
-      loggerApp.debug("Close DB..");
-      process.exit(err ? 1 : 0);
-    });
+    if (appconfig.persistence.mongo){
+
+        const DB = MongoConnect.getInstance(
+            appconfig.db.mongo.url,
+            appconfig.db.mongo.user,
+            appconfig.db.mongo.password,
+            appconfig.db.mongo.dbname,
+            appconfig.db.mongo.secure,
+            appconfig.persistence.mongo);
+
+            DB.getConnection().close(function(err:unknown) {
+                loggerApp.debug("Close DB..");
+                process.exit(err ? 1 : 0);
+              });
+    }
+    
+    process.exit(0);
 
  });

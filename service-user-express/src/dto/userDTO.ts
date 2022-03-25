@@ -1,7 +1,7 @@
 export interface IUserDTO {
     email:string;
     deleted:boolean;
-    username?:string;
+    username:string;
     roles:string[];
     password:string;
     id?:string;

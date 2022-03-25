@@ -1,17 +1,15 @@
 import { Schema } from 'mongoose';
-import { IUserRemote } from '../dao/user-remote';
+import { IUserRemote } from '../dao';
 
 
 export const SchemaUserRemote = new Schema<IUserRemote>({
     username: {
         type: String,
         required: true,
-        default: '',
     },
     password: {
         type: String,
-        required: true,
-        default: '',
+        required: true
     },
     roles:{
         type: [String],
@@ -20,8 +18,8 @@ export const SchemaUserRemote = new Schema<IUserRemote>({
     },
     email: {
         type: String,
-        required: false,
-        default: '',
+        required: true,
+        unique: true,
       },  
     deleted:{
         type: Boolean,

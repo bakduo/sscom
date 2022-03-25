@@ -1,6 +1,23 @@
 import { Connection, createConnection } from 'mongoose';
 
-export default class MongoConnect {
+export interface IMongoConnect {
+    getEnable():boolean;
+    getConnection():Connection;
+}
+
+export class NoMongoConnect implements IMongoConnect {
+
+    getConnection(): Connection {
+        throw new Error('Method not implemented.');
+    }
+
+    getEnable(): boolean {
+        return false;
+    }
+    
+}
+
+export default class MongoConnect implements IMongoConnect {
 
     private url:string;
 
@@ -9,30 +26,36 @@ export default class MongoConnect {
     private static instance: MongoConnect;
 
     private constructor(_url:string,_user:string,_pass:string,_dbname:string,_ssl:boolean){
-        this.url = _url;
-        this.connection = createConnection(this.url, {
-            ssl: _ssl,
-            dbName:_dbname,
-            user:_user,
-            pass:_pass
-          });
+
+        
+            this.url = _url;
+            this.connection = createConnection(this.url, {
+                ssl: _ssl,
+                dbName:_dbname,
+                user:_user,
+                pass:_pass
+              });
+        
     }
 
-    public static getInstance(_url:string,_user:string,_pass:string,_dbname:string,_ssl:boolean): MongoConnect {
-        if (!MongoConnect.instance) {
-            MongoConnect.instance = new MongoConnect(_url,_user,_pass,_dbname,_ssl);
+    getEnable(): boolean {
+        return true;
+    }
+
+    public static getInstance(_url:string,_user:string,_pass:string,_dbname:string,_ssl:boolean,_enable:boolean): IMongoConnect {
+        if (_enable){
+
+            if (!MongoConnect.instance) {
+                MongoConnect.instance = new MongoConnect(_url,_user,_pass,_dbname,_ssl);
+            }
+    
+            return MongoConnect.instance;
         }
 
-        return MongoConnect.instance;
+        return new NoMongoConnect();
+        
     }
     
-    connect():void{
-
-        // const conectar = async () => {
-        // }
-        // conectar();
-    }
-
     getConnection():Connection{
         return this.connection;
     }

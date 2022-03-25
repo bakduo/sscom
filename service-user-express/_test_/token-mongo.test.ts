@@ -1,0 +1,131 @@
+import * as chai from 'chai';
+import { tokenDAO } from '../src/init/configure';
+import faker from '@faker-js/faker';
+import { errorGenericType } from '../src/interfaces';
+const expect = chai.expect;
+
+describe('Test TokenDAO UNIT',async () => {
+
+    before(async function(){
+
+        console.log("###############BEGIN TEST TokenDAO#################");
+        
+        await Promise.all([
+            tokenDAO.saveOne({token:faker.internet.password(35)}),
+            tokenDAO.saveOne({token:faker.internet.password(35)}),
+            tokenDAO.saveOne({token:faker.internet.password(35)}),
+            tokenDAO.saveOne({token:faker.internet.password(35)}),
+            tokenDAO.saveOne({token:faker.internet.password(35)}),
+        ]);
+
+    });
+
+    after(async () => {
+        console.log("###############AFTER TEST TokenDAO#################");
+        await tokenDAO.deleteAll();
+    });
+
+    describe('Operaciones sobre Token DAO mongo', async () => {
+
+        it('Debería agregar un token', async () => {
+
+            const tokenTemp = faker.internet.password(35);
+            const item = await tokenDAO.saveOne({token:tokenTemp});
+            expect(item).to.be.an('object');
+            expect(item).to.have.property('token');
+            expect(item.token).to.equal(tokenTemp);
+        });
+
+        it('Debería listart todo', async () => {
+
+            const listaUser = await tokenDAO.getAll();
+            expect(listaUser).to.be.an('array');
+            expect(listaUser).to.length(6);
+        });
+        
+        it('Debería eliminar un token', async () => {
+
+            const listaUser = await tokenDAO.getAll();
+
+            const ok = await tokenDAO.deleteOne({keycustom:'token',valuecustom:listaUser[2].token});
+            expect(ok).to.be.an('boolean');
+            expect(ok).to.equal(true);
+        });
+
+        it('Debería buscar un token', async () => {
+
+            const listaUser = await tokenDAO.getAll();
+
+            const user = await tokenDAO.findOne({keycustom:'token',valuecustom:listaUser[3].token});
+            expect(user).to.be.an('object');
+            expect(user).to.have.property('token');
+            expect(user.token).to.equal(listaUser[3].token);
+        });
+
+        it('Debería actualizar un token', async () => {
+
+            const listaUser = await tokenDAO.getAll();
+
+            const tokenTemp = faker.internet.password(35);
+            
+            await tokenDAO.updateOne(listaUser[3].token,{token:tokenTemp});
+            
+            const tokenExist = await tokenDAO.findOne({keycustom:'token',valuecustom:tokenTemp});
+            
+            expect(tokenExist).to.be.an('object');
+            expect(tokenExist).to.have.property('token');
+            expect(tokenExist.token).to.equal(tokenTemp);
+
+        });
+
+        it('Debería saltar exception por token duplicado', async () => {
+
+            const listaUser = await tokenDAO.getAll();
+
+            try {
+                await tokenDAO.saveOne({token:listaUser[0].token});    
+            } catch (error:unknown) {
+                const err = error as errorGenericType;
+                expect(err.message).to.contain("Exception on saveOne into MongoDB E11000 duplicate key error collection");
+            }
+            
+        });
+
+        it('Debería saltar exception por update que no existe', async () => {
+
+            try {
+                await tokenDAO.updateOne('no existe',{token:'no existe'});    
+            } catch (error:unknown) {
+                const err = error as errorGenericType;
+                expect(err.message).to.contain("Exception on updateOne into MongoDB");
+            }
+            
+        });
+
+        it('Debería saltar exception por delete que no existe', async () => {
+
+            try {
+                await tokenDAO.deleteOne({keycustom:'token',valuecustom:'no existe'});
+            } catch (error:unknown) {
+                const err = error as errorGenericType;
+                expect(err.message).to.contain("Exception on deleteOne into MongoDB");
+            }
+            
+        });
+
+        it('Debería saltar exception por find que no existe', async () => {
+
+            try {
+                await tokenDAO.findOne({keycustom:'token',valuecustom:'no existe'});
+            } catch (error:unknown) {
+                const err = error as errorGenericType;
+                expect(err.message).to.contain("Exception on findOne into MongoDB");
+            }
+            
+        });
+        
+
+    });
+
+
+});

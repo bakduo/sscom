@@ -1,9 +1,8 @@
 import {Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
-import { appconfig, ERRORS_APP, loggerApp } from '../init/configure';
+import { appconfig, ERRORS_APP, loggerApp, tokenDAO } from '../init/configure';
 import { EBase, ITokenDecode } from '../interfaces/custom';
 import { errorGenericType } from '../interfaces';
-import { MongoTokenDao } from '../dao/storage/token';
 import { isValidToken } from '../util/validToken';
 
 export class ETokenInvalid extends EBase {
@@ -20,10 +19,8 @@ export const checkForRefreshToken = async (req:Request, res:Response, next:NextF
     if (!token) {
         return res.status(401).json({message:'Invalid request'});
     }
-
-    const daotoken = MongoTokenDao.getInstance();
-
-    const existe = await daotoken.findOne({keycustom:'token',valuecustom:token});
+    
+    const existe = await tokenDAO.findOne({keycustom:'token',valuecustom:token});
 
     if (!isValidToken(existe)){
       return res.status(403).json({message:'Forbidden Request'});
@@ -34,8 +31,8 @@ export const checkForRefreshToken = async (req:Request, res:Response, next:NextF
       const decoded = jwt.verify(token, appconfig.jwt.secretRefresh);
 
       const {id, roles} = decoded as ITokenDecode;
-  
-        const accessToken = jwt.sign({id, roles}, appconfig.jwt.secret, { expiresIn: '2m' });
+
+        const accessToken = jwt.sign({id, roles}, appconfig.jwt.secret, { expiresIn: appconfig.jwt.timeToken });
   
         req.user = {id, roles,accessToken};
   
@@ -72,7 +69,7 @@ export const checkToken = async (req:Request, res:Response, next:NextFunction) =
         }
       }
 
-     return res.status(401).json({ message: 'Auth failed' });
+     return res.status(401).json({ message: 'Operation failed, required authorization' });
 
     } catch (error) {
       const err = error as errorGenericType;

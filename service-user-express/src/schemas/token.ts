@@ -1,10 +1,11 @@
 import { Schema } from 'mongoose';
-import { IToken } from '../dao/IToken';
+import { IToken } from '../dao';
 
 export const SchemaToken = new Schema<IToken>({
     token: {
         type: String,
         required: true,
+        unique: true,
         default: '',
     },
     date: {

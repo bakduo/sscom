@@ -2,19 +2,15 @@
 import passport from "passport";
 import passportLocal from "passport-local";
 
-import { MongoUserRemoteDao } from '../dao/storage/user-remote';
 import { errorGenericType } from "../interfaces";
-import { appconfig, loggerApp, ERRORS_APP } from '../init/configure';
-import { isValidUser } from "../util/validuser";
+import { appconfig, loggerApp, ERRORS_APP, userDAO, tokenDAO } from '../init/configure';
+import { isValidUser, validateUser } from '../util/validuser';
 import bcrypt from 'bcrypt';
 import { isValidPassword } from "../util";
 import jwt from 'jsonwebtoken';
 import { EBase } from "../interfaces/custom";
-import { MongoTokenDao } from '../dao/storage/token';
 
 const LocalStrategy = passportLocal.Strategy;
-
-const genericUser = MongoUserRemoteDao.getInstance();
 
 class EInvalidUser extends EBase {
 
@@ -55,7 +51,7 @@ export const initPassport = ()=>{
     
        const idx = id as string;
     
-       const user = await genericUser.findOne({keycustom:'email',valuecustom:idx});
+       const user = await userDAO.findOne({keycustom:'email',valuecustom:idx});
     
        if (user){
         done(null, user);
@@ -66,7 +62,13 @@ export const initPassport = ()=>{
     
     passport.use('signup',new LocalStrategy({ passReqToCallback:true,usernameField: "email"}, (req,email, password, done) => {
 
-           genericUser.findOne({keycustom:'email',valuecustom:email.toLowerCase()})
+        const { error } = validateUser(req.body);
+
+        if (error){
+            return done(new EInvalidUser(`Invalid user for creation ${error.details[0].message}`,ERRORS_APP.EInvalidUserForCreation.code,ERRORS_APP.EInvalidUserForCreation.HttpStatusCode));
+        }
+
+          userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()})
 
            .then((encontrado)=>{
 
@@ -88,7 +90,7 @@ export const initPassport = ()=>{
                         deleted:false
                     }
 
-                    genericUser.saveOne(newUser)
+                    userDAO.saveOne(newUser)
 
                     .then((user)=>{
                         
@@ -115,9 +117,8 @@ export const initPassport = ()=>{
     
     passport.use('login',new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
         try {
-            const genericUser = MongoUserRemoteDao.getInstance();
 
-              genericUser.findOne({keycustom:'email',valuecustom:email})
+              userDAO.findOne({keycustom:'email',valuecustom:email})
 
               .then((user)=>{
                 if (!user) {
@@ -137,7 +138,7 @@ export const initPassport = ()=>{
                               },
                               appconfig.jwt.secret,
                               {
-                                expiresIn: '1m',
+                                expiresIn: appconfig.jwt.timeToken,
                               }
                             );
                             const refreshToken = jwt.sign({
@@ -145,9 +146,7 @@ export const initPassport = ()=>{
                                 roles: user.roles,
                               }, appconfig.jwt.secretRefresh);
 
-                            const daorefresh = MongoTokenDao.getInstance();
-
-                            daorefresh.saveOne({token:refreshToken,date:Date.now()})
+                            tokenDAO.saveOne({token:refreshToken,date:Date.now()})
 
                             .then((tokenRefresh)=>{
 

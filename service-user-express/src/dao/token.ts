@@ -1,11 +1,12 @@
-import { Model } from 'mongoose';
-import { IToken } from "../IToken";
+import { SchemaToken } from './../schemas/token';
+import { Model, Connection } from 'mongoose';
+import { ITokenDTO } from '../dto/tokenDTO';
+import { loggerApp } from '../init/configure';
 import { IGenericDB, IsearchItem } from "./generic";
-import { SchemaToken } from '../../schemas/token';
-import { connectionDB, loggerApp } from "../../init/configure";
-import { errorGenericType } from "../../interfaces";
-import { IKeyValue } from '../../interfaces/custom';
-import { ITokenDTO } from '../../dto/tokenDTO';
+import { IToken } from './IToken';
+import { errorGenericType } from '../interfaces';
+import { IKeyValue } from '../interfaces/custom';
+import { IMongoConnect } from '../datastore';
 
 class NoToken implements IToken {
 
@@ -20,16 +21,16 @@ class NoToken implements IToken {
     }
 }
 
-export class MongoTokenDao implements IGenericDB<IToken|ITokenDTO> {
+export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 
     model: Model<IToken>;
 
     private static instance: MongoTokenDao;
 
-    private constructor(){
+    private constructor(_connection:Connection){
         try {
 
-            this.model = connectionDB.model<IToken>('Token',SchemaToken);
+            this.model = _connection.model<IToken>('Token',SchemaToken);
 
         } catch (error:unknown) {
             const err = error as errorGenericType;
@@ -38,9 +39,9 @@ export class MongoTokenDao implements IGenericDB<IToken|ITokenDTO> {
         }
     }
 
-    public static getInstance(): MongoTokenDao {
+    public static getInstance(mongoconnect:IMongoConnect): MongoTokenDao {
         if (!MongoTokenDao.instance) {
-            MongoTokenDao.instance = new MongoTokenDao();
+            MongoTokenDao.instance = new MongoTokenDao(mongoconnect.getConnection());
         }
 
         return MongoTokenDao.instance;
@@ -100,7 +101,7 @@ export class MongoTokenDao implements IGenericDB<IToken|ITokenDTO> {
             try {
 
                 const mItem = {
-                    timestamp:Date.now(),
+                    date:Math.floor(Date.now()/1000),
                     ...item
                 }
 
@@ -119,7 +120,7 @@ export class MongoTokenDao implements IGenericDB<IToken|ITokenDTO> {
             } catch (error:unknown) {
                 const err = error as errorGenericType;
                 loggerApp.error(`Exception on saveOne into MongoDB: ${err.message}`);
-                throw new Error(`Exception on saveOne into MongoDB`);
+                throw new Error(`Exception on saveOne into MongoDB ${err.message}`);
             }
     }
 
@@ -137,26 +138,36 @@ export class MongoTokenDao implements IGenericDB<IToken|ITokenDTO> {
         return [];
     }
 
-    async updateOne(id: string, item: IToken): Promise<ITokenDTO> {
+    async updateOne(token: string, item: ITokenDTO): Promise<ITokenDTO> {
 
+        const mItem = {
+            date:Math.floor(Date.now()/1000),
+            ...item
+        }
 
-            const updateItem = await this.model.findOneAndUpdate({_id:id},item);
+        const existe = await this.model.findOne({"token":token});
+
+        if (existe){
+
+            const updateItem = await this.model.findByIdAndUpdate(existe._id,mItem);
 
             try {
                 if (updateItem){
-                    const {token,date} = updateItem;
+                
+                    const {token} = updateItem;
     
-                    return {token,date};
-                }    
+                    return {token};
+                }
             } catch (error) {
                 const err = error as errorGenericType;
-                loggerApp.error(`Exception on saveOne into MongoDB: ${err.message}`);
-                throw new Error(`Exception on saveOne into MongoDB`);
+                loggerApp.error(`Exception on updateOne into MongoDB: ${err.message}`);
+                throw new Error(`Exception on updateOne into MongoDB ${err.message}`);
             }
-            
-            return new NoToken();
+        }
         
-    }
+        return new NoToken();
+    
+}
 
     async deleteAll(): Promise<void> {
         await this.model.deleteMany();

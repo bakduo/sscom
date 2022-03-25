@@ -18,13 +18,17 @@ initPassport();
 
 const controller = new ControllerServiceAuth();
 
-routerGlobal.post('/login',passport.authenticate('login',{'failureRedirect':'/faillogin'}),controller.postLogin);
+routerGlobal.post('/login',
 
-routerGlobal.post('/logout',controller.postLogout);
+passport.authenticate('login',{'failureRedirect':'/faillogin'}),
 
-routerGlobal.post('/find',controller.search);
+controller.postLogin);
 
-routerGlobal.delete('/delete',controller.delete);
+routerGlobal.post('/logout',checkToken,controller.postLogout);
+
+routerGlobal.post('/find',checkToken,controller.search);
+
+routerGlobal.delete('/delete',checkToken,controller.delete);
 
 routerGlobal.post('/signup',passport.authenticate('signup',{'failureRedirect':'/failsignup'}),controller.postSignup);
 
