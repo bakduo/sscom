@@ -165,7 +165,11 @@ mochawesome-report/
 deploy-memcached.yml
 deploy-sharefiles.yml
 deploy-memcached-2.yml
+docker-mongo.yml
+init-rs.sh
 nginx/
 ecosystem.config.js
 test.txt
 log/
+dist/
+loading/

@@ -3,6 +3,7 @@ import pino from "pino";
 import stream from 'stream';
 import childProcess from 'child_process';
 import { FUserDAO, FTokenDAO } from '../dao/fdao';
+import { string } from 'joi';
 
 const logThrough = new stream.PassThrough();
 
@@ -53,24 +54,29 @@ export const ERRORS_APP = {
         code: 1002,
         HttpStatusCode: 400
     },
+    'EInvalidUserRepited':{
+        detail:'The user thats exists',
+        code: 1003,
+        HttpStatusCode: 400
+    },
     'EInvalidUser':{
         detail:'Invalid user or password',
-        code: 1003,
+        code: 1004,
         HttpStatusCode: 401
     },
     'EInvalidUserForCreation':{
         detail:'Invalid user body',
-        code: 1004,
+        code: 1005,
         HttpStatusCode: 400
     },
     'ESaveUser':{
         detail:'Exception on save user into datastore',
-        code: 1005,
+        code: 1006,
         HttpStatusCode: 500
     },
     'EFindUser':{
         detail:'Exception on findone on datastore',
-        code: 1006,
+        code: 1007,
         HttpStatusCode: 500
     },
     'EBase':{
@@ -83,6 +89,7 @@ export const ERRORS_APP = {
 export interface IConfigDB {
     db:{
         mongo:{
+            urlreplica:string;
             url:string;
             dbname:string;
             host:string;
@@ -104,6 +111,8 @@ export interface IConfigDB {
     protocol:string;
     logpath:string;
     persistence:{
+        replicaset:boolean;
+        transaction:boolean;
         type:string;
         mongo:boolean;
         memory:boolean;

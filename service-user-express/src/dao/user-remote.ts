@@ -2,11 +2,12 @@ import { SchemaUserRemote } from './../schemas/user-remote';
 import { IGenericDB, IsearchItem, IPassword } from './generic';
 import { Model, Connection } from 'mongoose';
 import { IPasswordDTO, IUserDTO } from '../dto/userDTO';
-import { loggerApp } from '../init/configure';
+import { loggerApp, appconfig } from '../init/configure';
 import { errorGenericType } from '../interfaces';
-import { IKeyValue } from '../interfaces/custom';
+import { IKeyValue, TDeletedMongo } from '../interfaces/custom';
 import { IMongoConnect } from '../datastore';
 import { IUserRemote } from './Iuser-remote';
+
 
 export class MongoUserPassword implements IPassword<IPasswordDTO> {
 
@@ -52,16 +53,26 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
     model: Model<IUserRemote>;
 
     private static instance: MongoUserRemoteDao;
+    private supportTransaction:boolean;
+    private connnectionMongo:Connection;
+    
 
-    private constructor(_connection:Connection){
+    private constructor(_connection:Connection,transaction:boolean){
         try {
 
+            if (MongoUserRemoteDao.instance){
+                throw new Error("Not permit double instance MongoUserRemoteDao");
+            }
+
             this.model = _connection.model<IUserRemote>('UserRemote',SchemaUserRemote);
+            this.supportTransaction = transaction;
+            this.connnectionMongo = _connection;
+        
 
         } catch (error:unknown) {
             const err = error as errorGenericType;
             loggerApp.error(`Exception on constructor into MongoDB: ${err.message}`);
-            throw new Error("Error to Generated MLinkUser");
+            throw new Error("Error to Generated MongoUserRemoteDao");
         }
     }
 
@@ -71,7 +82,7 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
 
     public static getInstance(mongoconnect:IMongoConnect): MongoUserRemoteDao {
         if (!MongoUserRemoteDao.instance) {
-            MongoUserRemoteDao.instance = new MongoUserRemoteDao(mongoconnect.getConnection());
+            MongoUserRemoteDao.instance = new MongoUserRemoteDao(mongoconnect.getConnection(),appconfig.persistence.transaction);
         }
 
         return MongoUserRemoteDao.instance;
@@ -86,12 +97,24 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
         queryObj[keycustom] = valuecustom;
 
         try {
-            const item = await this.model.findOne(queryObj);
+
+            let item:IUserRemote | false;
+
+            if (this.supportTransaction){
+                const session = await this.connnectionMongo.startSession();
+                session.startTransaction();
+                item = await this.model.findOne(queryObj).session(session) || false;
+                session.endSession();
+            }else{
+                item = await this.model.findOne(queryObj) || false;
+            }
+
             if (item){
                 const {email,deleted,username,password,roles} = item;
     
                 return {email,deleted,username,password,roles};
-            }    
+            }
+
         } catch (error) {
             const err = error as errorGenericType;
             throw new Error(`Exception on findOne ${err.message}`);
@@ -109,7 +132,18 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
         queryObj[keycustom] = valuecustom;
 
         try {
-            const item = await this.model.deleteOne(queryObj);
+            
+            let item:TDeletedMongo;
+
+            if (this.supportTransaction){
+                const session = await this.connnectionMongo.startSession();
+                session.startTransaction();
+                item = await this.model.deleteOne(queryObj).session(session);
+                await session.commitTransaction();
+                session.endSession();
+            }else{
+                item = await this.model.deleteOne(queryObj);
+            }
 
             if (item){
                 if (item.deletedCount>0){
@@ -133,16 +167,28 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
                     ...item
                 }
 
-                const newItem:IUserRemote = await this.model.create(mItem);
+                let newItem:IUserRemote[];
 
-                if (newItem){
-                   
-                    const {email,deleted,username,password,roles} = newItem;
+                let newItemSingle:IUserRemote;
 
-                    return {email,deleted,username,password,roles};
+                if (this.supportTransaction){
+                    const session = await this.connnectionMongo.startSession();
+                    session.startTransaction();
+                    newItem = await this.model.create([mItem],{session:session});
+                    await session.commitTransaction();
+                    session.endSession();
+                    if (newItem){
+                        const {email,deleted,username,password,roles} = newItem[0];
+                        return {email,deleted,username,password,roles};
+                    }
+                }else{
+                    newItemSingle = await this.model.create(mItem);
+                    if (newItemSingle){
+                        const {email,deleted,username,password,roles} = newItemSingle;
+                        return {email,deleted,username,password,roles};
+                    }
+                }
 
-                }    
-                
                 throw new Error(`Exception on create into MongoDB`);
 
             } catch (error:unknown) {
@@ -173,19 +219,60 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
                 ...item
             }
 
-            const existe = await this.model.findOne({"email":email});
+            let existe:IUserRemote | false;
+            let updateItem:IUserRemote | false;
 
-            if (existe){
-
-                const updateItem = await this.model.findByIdAndUpdate(existe._id,mItem);
+            if (this.supportTransaction){
 
                 try {
-                    if (updateItem){
-                    
-                        const {email,deleted,username,password,roles} = updateItem;
+
+                    const session = await this.connnectionMongo.startSession();
+    
+                    session.startTransaction();
+    
+                    existe = await this.model.findOne({"email":email}).session(session) || false;
+    
+                    if (existe){
         
-                        return {email,deleted,username,password,roles};
+                        updateItem = await this.model.findByIdAndUpdate(existe._id,mItem).session(session) || false;
+    
+                        await session.commitTransaction();
+    
+                        session.endSession();
+
+                        if (updateItem){
+                                    
+                            const {email,deleted,username,password,roles} = updateItem;
+            
+                            return {email,deleted,username,password,roles};
+                        }
+        
                     }
+
+                } catch (error) {
+                    const err = error as errorGenericType;
+                    loggerApp.error(`Exception on updateOne into MongoDB: ${err.message}`);
+                    throw new Error(`Exception on updateOne into MongoDB ${err.message}`);
+                }
+
+            }else{
+
+                try {
+
+                    existe = await this.model.findOne({"email":email}) || false;
+
+                    if (existe){   
+
+                        updateItem = await this.model.findByIdAndUpdate(existe._id,mItem) || false;
+
+                        if (updateItem){
+                                    
+                            const {email,deleted,username,password,roles} = updateItem;
+            
+                            return {email,deleted,username,password,roles};
+                        }
+                    }
+
                 } catch (error) {
                     const err = error as errorGenericType;
                     loggerApp.error(`Exception on updateOne into MongoDB: ${err.message}`);

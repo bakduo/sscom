@@ -7,6 +7,14 @@ export interface IKeyValue {
     [key:string]:string | number;
 }
 
+export interface IDeleted{
+    deletedCount:number;
+    n?:number;
+    ok?:number;
+}
+
+export type TDeletedMongo = IDeleted;
+
 export interface IUserToken extends Express.User {
     id?:string;
     email:string;

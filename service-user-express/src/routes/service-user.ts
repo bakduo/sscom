@@ -28,6 +28,8 @@ routerGlobal.post('/logout',checkToken,controller.postLogout);
 
 routerGlobal.post('/find',checkToken,controller.search);
 
+routerGlobal.post('/count',controller.count);
+
 routerGlobal.delete('/delete',checkToken,controller.delete);
 
 routerGlobal.post('/signup',passport.authenticate('signup',{'failureRedirect':'/failsignup'}),controller.postSignup);

@@ -4,7 +4,7 @@ import passportLocal from "passport-local";
 
 import { errorGenericType } from "../interfaces";
 import { appconfig, loggerApp, ERRORS_APP, userDAO, tokenDAO } from '../init/configure';
-import { isValidUser, validateUser } from '../util/validuser';
+import { validateUser } from '../util/validuser';
 import bcrypt from 'bcrypt';
 import { isValidPassword } from "../util";
 import jwt from 'jsonwebtoken';
@@ -60,7 +60,7 @@ export const initPassport = ()=>{
        
     });
     
-    passport.use('signup',new LocalStrategy({ passReqToCallback:true,usernameField: "email"}, (req,email, password, done) => {
+    passport.use('signup',new LocalStrategy({ passReqToCallback:true,usernameField: "email"}, async (req,_email, _password, done) => {
 
         const { error } = validateUser(req.body);
 
@@ -68,49 +68,48 @@ export const initPassport = ()=>{
             return done(new EInvalidUser(`Invalid user for creation ${error.details[0].message}`,ERRORS_APP.EInvalidUserForCreation.code,ERRORS_APP.EInvalidUserForCreation.HttpStatusCode));
         }
 
-          userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()})
+        try {
 
-           .then((encontrado)=>{
+            const {email,username,password,roles} = req.body;
 
-                if (isValidUser(encontrado)){
-                    return done(new EInvalidUser("Invalid user that exists",ERRORS_APP.EFindUser.code,ERRORS_APP.EInvalidUser.HttpStatusCode));
+            const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
+
+            const { error } = validateUser(encontrado);
+
+            if (!error){
+                return done(new EInvalidUser(`User existent Not permit`,ERRORS_APP.EInvalidUserRepited.code,ERRORS_APP.EInvalidUserRepited.HttpStatusCode));
+            }
+
+            const newPassword = bcrypt.hashSync(
+                password,
+                bcrypt.genSaltSync(11));
+
+            const newUser = {
+                email:email.toLowerCase(),
+                username:username,
+                password:newPassword,
+                roles:roles,
+                deleted:false
+            }
+
+            try {
+                const savedUsers = await userDAO.saveOne(newUser);
+                if (savedUsers){
+                    const {email,roles} = savedUsers;
+                    return done(null,{id:email,roles,token:'',refreshtoken:''});
                 }
-                
-                const {email,username,password,roles} = req.body;
+            } catch (error) {
+                const err = error as errorGenericType;
+                loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
+                return done(new ESaveUser(`Exception on LocalStrategy into passport: ${err.message}`,ERRORS_APP.ESaveUser.code,ERRORS_APP.ESaveUser.HttpStatusCode));
+            }
 
-                const newPassword = bcrypt.hashSync(
-                    password,
-                    bcrypt.genSaltSync(11));
-
-                    const newUser = {
-                        email:email,
-                        username:username,
-                        password:newPassword,
-                        roles:roles,
-                        deleted:false
-                    }
-
-                    userDAO.saveOne(newUser)
-
-                    .then((user)=>{
-                        
-                        const {email,roles} = user;
-
-                        return done(null,{id:email,roles,token:'',refreshtoken:''});
-
-                    })
-                    .catch((error)=>{
-                        const err = error as errorGenericType;
-                        loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
-                        return done(new ESaveUser(`Exception on LocalStrategy into passport: ${err.message}`,ERRORS_APP.ESaveUser.code,ERRORS_APP.ESaveUser.HttpStatusCode));
-                    });
-                
-           })
-           .catch((error)=>{
+            
+        } catch (error) {
             const err = error as errorGenericType;
             loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
             return done(new EFindUser(`Exception on LocalStrategy into passport: ${err.message}`,ERRORS_APP.EFindUser.code,ERRORS_APP.EFindUser.HttpStatusCode));
-           })
+        }
         
     }));
 
@@ -118,60 +117,48 @@ export const initPassport = ()=>{
     passport.use('login',new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
         try {
 
-              userDAO.findOne({keycustom:'email',valuecustom:email})
+             const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
 
-              .then((user)=>{
-                if (!user) {
-                    return done(new EInvalidCredential('usuario o password invalido',ERRORS_APP.EInvalidCredential.code,ERRORS_APP.EInvalidCredential.HttpStatusCode));
-                  } else {
-                    isValidPassword(password,user.password)
-                    .then((valid)=>{
+             if (!encontrado){
+                return done(new EInvalidCredential('usuario o password invalido',ERRORS_APP.EInvalidCredential.code,ERRORS_APP.EInvalidCredential.HttpStatusCode));
+             }
 
-                        if (!valid) {
-                            return done(new EInvalidCredential('usuario o password invalido',ERRORS_APP.EInvalidCredential.code,ERRORS_APP.EInvalidCredential.HttpStatusCode));
-                          } else {
+             const valido = await isValidPassword(password,encontrado.password);
 
-                            const token = jwt.sign(
-                              {
-                                id:user.email,
-                                roles: user.roles,
-                              },
-                              appconfig.jwt.secret,
-                              {
-                                expiresIn: appconfig.jwt.timeToken,
-                              }
-                            );
-                            const refreshToken = jwt.sign({
-                                id:user.email,
-                                roles: user.roles,
-                              }, appconfig.jwt.secretRefresh);
+             if (!valido){
+                return done(new EInvalidCredential('usuario o password invalido',ERRORS_APP.EInvalidCredential.code,ERRORS_APP.EInvalidCredential.HttpStatusCode));
+             }
 
-                            tokenDAO.saveOne({token:refreshToken,date:Date.now()})
+            const token = jwt.sign(
+                {
+                    id:encontrado.email,
+                    roles: encontrado.roles,
+                },
+                appconfig.jwt.secret,
+                {
+                    expiresIn: appconfig.jwt.timeToken,
+                }
+                );
 
-                            .then((tokenRefresh)=>{
+            const refreshToken = jwt.sign({
+                id:encontrado.email,
+                roles: encontrado.roles,
+            }, appconfig.jwt.secretRefresh);
 
-                                return done(null,{id:user.email,username:user.username,roles:user.roles,token:token,refreshtoken:tokenRefresh.token});
+            try {
 
-                            })
-                            .catch((error)=>{
-                                const err = error as errorGenericType;
-                                loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
-                                return done(new EBase(`Exception on MongoTokenDao into saveOne: ${err.message}`,ERRORS_APP.EBase.code));
-                            })
-                        }
-                    })
-                    .catch((error)=>{
-                        const err = error as errorGenericType;
-                        loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
-                        return done(new EBase(`Exception on LocalStrategy into isValidPassword: ${err.message}`,ERRORS_APP.EBase.code));
-                    })
-                  }
-              })
-              .catch((error)=>{
+                const tokenSaved = await tokenDAO.saveOne({token:refreshToken,date:Date.now()});
+
+                if (tokenSaved){
+                    return done(null,{id:encontrado.email,username:encontrado.username,roles:encontrado.roles,token:token,refreshtoken:tokenSaved.token});
+                }
+
+            } catch (error) {
                 const err = error as errorGenericType;
                 loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
-                return done(new EBase(`Exception on LocalStrategy into findOne: ${err.message}`,ERRORS_APP.EBase.code));
-              })
+                return done(new EBase(`Exception on MongoTokenDao into saveOne: ${err.message}`,ERRORS_APP.EBase.code));
+            }
+
           } catch (error) {
             const err = error as errorGenericType;
             loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);

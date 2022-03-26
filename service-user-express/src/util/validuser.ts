@@ -4,7 +4,7 @@ import { IUserDTO } from '../dto/userDTO';
 import * as Joi from 'joi';
 
 export const isValidUser = (user:IUserDTO):boolean =>{
-  
+      
     if (user.email.length===0 || user.roles.length===0){
       return false;
     }

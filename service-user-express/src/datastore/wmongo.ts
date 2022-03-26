@@ -33,7 +33,8 @@ export default class MongoConnect implements IMongoConnect {
                 ssl: _ssl,
                 dbName:_dbname,
                 user:_user,
-                pass:_pass
+                pass:_pass,
+                autoIndex: true
               });
         
     }

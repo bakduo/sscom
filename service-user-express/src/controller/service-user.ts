@@ -9,6 +9,22 @@ import { ETokenInvalid } from '../middleware/check-sign-token';
 export class ControllerServiceAuth {
 
 
+
+    count = async (req:Request,res:Response,next:NextFunction)=>{
+
+        //const user = req.user as IUserToken;
+
+        //if (user.roles.includes('admin')){
+    
+            const allUsers = await userDAO.getAll();
+    
+            return res.status(200).json({users:allUsers,cant:allUsers.length});
+        //}
+
+        //res.status(401).json({message:'User not have privileges'});
+    }
+
+
     search = async (req:Request,res:Response,next:NextFunction)=>{
 
         const user = req.user as IUserToken;
@@ -20,13 +36,13 @@ export class ControllerServiceAuth {
             const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
     
             if (isValidUser(encontrado)){
-                res.status(200).json(encontrado);
+                return res.status(200).json(encontrado);
             }
     
-            res.status(404).json({message:'user not found'});
+            return res.status(404).json({message:'user not found'});
         }
 
-        res.status(401).json({message:'User not have privileges'});
+        return res.status(401).json({message:'User not have privileges'});
     }
 
 
@@ -112,9 +128,10 @@ export class ControllerServiceAuth {
 
     postSignup = async (req:Request,res:Response,next:NextFunction) =>{
 
+
         try {
             const user = req.user as IUserToken;
-
+            
             const {id,roles} = user;
 
             return res.status(201).json({profile:{id,roles}});

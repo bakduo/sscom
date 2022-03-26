@@ -69,6 +69,23 @@ describe('Test controller UNIT',async () => {
             expect(responseUser.profile).to.include.keys('id','roles');
         });
 
+        it('No debería generar un usuario repetido', async () => {  
+
+            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.internet.userName(),password:"sample"};
+
+            const response = await request.post('/api/signup').send(user);
+            
+            expect(response.status).to.eql(400);
+
+            const responseUser = response.body;
+
+            expect(responseUser).to.be.a('object');
+
+            expect(responseUser).to.include.keys('message');
+
+            expect(responseUser.message).to.contain("User existent Not permit");
+        });
+
 
         it('debería realizar login de un usuario', async () => {  
 
