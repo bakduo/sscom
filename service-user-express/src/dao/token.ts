@@ -13,12 +13,18 @@ class NoToken implements IToken {
     token: string;
     date: number;
     timestamp: number;
+    tmptoken: string;
+    email: string;
 
     constructor(){
         this.token = '';
         this.date = -1;
         this.timestamp = -1;
+        this.tmptoken = '';
+        this.email = '';
     }
+  
+   
 }
 
 export class MongoTokenDao implements IGenericDB<ITokenDTO> {
@@ -56,12 +62,12 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
         queryObj[keycustom] = valuecustom;
 
         try {
-            const item = await this.model.findOne(queryObj);
+            const item = await this.model.findOne(queryObj) || false;
             
             if (item){
-                const {token} = item;
+                const {token,tmptoken,email} = item;
     
-                return {token};
+                return {token,tmptoken,email};
             }    
         } catch (error) {
             const err = error as errorGenericType;
@@ -109,9 +115,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 
                 if (newItem){
                    
-                    const {token} = newItem;
+                    const {token,email,tmptoken} = newItem;
 
-                    return {token};
+                    return {token,email,tmptoken};
 
                 }    
                 
@@ -129,9 +135,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
         const allItems = await this.model.find();
         if (allItems){
             return allItems.map((item)=> {
-                const {token,date}  = item;
+                const {token,email,date,tmptoken}  = item;
 
-                return {token,date};
+                return {token,email,date,tmptoken};
             });
         }
 
@@ -154,9 +160,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             try {
                 if (updateItem){
                 
-                    const {token} = updateItem;
+                    const {token,email,tmptoken} = updateItem;
     
-                    return {token};
+                    return {token,email,tmptoken};
                 }
             } catch (error) {
                 const err = error as errorGenericType;
@@ -170,7 +176,7 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 }
 
     async deleteAll(): Promise<void> {
-        await this.model.deleteMany();
+        await this.model.deleteMany({});
     }
 
 }

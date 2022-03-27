@@ -9,6 +9,9 @@ import bcrypt from 'bcrypt';
 import { isValidPassword } from "../util";
 import jwt from 'jsonwebtoken';
 import { EBase } from "../interfaces/custom";
+import { checkRealToken } from "../util/validToken";
+import { ETokenInvalid } from "./check-sign-token";
+import { ITokenDTO } from '../dto/tokenDTO';
 
 const LocalStrategy = passportLocal.Strategy;
 
@@ -117,6 +120,9 @@ export const initPassport = ()=>{
     passport.use('login',new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
         try {
 
+             let updateToken = false;
+             let existeToken:ITokenDTO;
+
              const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
 
              if (!encontrado){
@@ -128,6 +134,38 @@ export const initPassport = ()=>{
              if (!valido){
                 return done(new EInvalidCredential('usuario o password invalido',ERRORS_APP.EInvalidCredential.code,ERRORS_APP.EInvalidCredential.HttpStatusCode));
              }
+
+             try {
+                
+                existeToken = await tokenDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
+                
+                if (existeToken){
+
+                    if (existeToken.email===email.toLowerCase()){
+
+                        try {
+
+                            checkRealToken(existeToken.tmptoken);
+
+                            return done(null,{id:encontrado.email,
+                                username:encontrado.username,
+                                roles:encontrado.roles,
+                                token:existeToken.tmptoken,
+                                refreshtoken:existeToken.token});
+
+                        } catch (error) {
+                            updateToken = true;
+                            loggerApp.error(`Exception Token vencido se genera uno nuevo para el user: ${existeToken.email}`);
+                        }
+                    }
+                }
+
+             } catch (error) {
+                const err = error as errorGenericType;
+                loggerApp.error(`Exception on LocalStrategy into passport: ${err.message}`);
+                return done(new EBase(`Exception on tokenDAO findOne into login: ${err.message}`,ERRORS_APP.EBase.code));
+             }
+             
 
             const token = jwt.sign(
                 {
@@ -147,7 +185,13 @@ export const initPassport = ()=>{
 
             try {
 
-                const tokenSaved = await tokenDAO.saveOne({token:refreshToken,date:Date.now()});
+                let tokenSaved:ITokenDTO;
+
+                if (updateToken){
+                    tokenSaved = await tokenDAO.updateOne(existeToken.token,{token:refreshToken,email:encontrado.email,tmptoken:token,date:Date.now()});
+                }else{
+                    tokenSaved = await tokenDAO.saveOne({token:refreshToken,email:encontrado.email,tmptoken:token,date:Date.now()});
+                }
 
                 if (tokenSaved){
                     return done(null,{id:encontrado.email,username:encontrado.username,roles:encontrado.roles,token:token,refreshtoken:tokenSaved.token});

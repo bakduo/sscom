@@ -145,6 +145,35 @@ describe('Test controller UNIT',async () => {
         });
 
 
+        it('debería realizar login de un usuario de nuevo y retornar token valido', async () => {
+
+            const user= {email:"sample@dot.com",password:"sample"};
+
+            const response = await request.post('/api/login').send(user);
+            
+            expect(response.status).to.eql(200);
+
+            const responseUser = response.body;
+
+            expect(responseUser).to.be.a('object');
+            
+            expect(responseUser).to.include.keys('token','refresh','fail');
+
+            expect(responseUser.token).to.be.a('string');
+            
+            expect(responseUser.refresh).to.be.a('string');
+            
+            expect(responseUser.fail).to.be.a('boolean');
+            
+            expect(responseUser.fail).to.equal(false);
+
+            expect(responseUser.token).to.equal(tokenUser);
+            
+            expect(responseUser.refresh).to.equal(refreshTokenUser);
+
+        });
+
+
         it('debería mostrar el profile', async () => {
 
             const response = await request.get('/api/profile').set('Authorization',`Bearer ${tokenUser}`);

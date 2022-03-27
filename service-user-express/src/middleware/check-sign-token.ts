@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { appconfig, ERRORS_APP, loggerApp, tokenDAO } from '../init/configure';
 import { EBase, ITokenDecode } from '../interfaces/custom';
 import { errorGenericType } from '../interfaces';
-import { isValidToken } from '../util/validToken';
+import { checkRealToken, isValidToken } from '../util/validToken';
 
 export class ETokenInvalid extends EBase {
 
@@ -55,17 +55,19 @@ export const checkToken = async (req:Request, res:Response, next:NextFunction) =
         
         if (token){
           try {
-            const decoded = jwt.verify(token, appconfig.jwt.secret);
+            // const decoded = jwt.verify(token, appconfig.jwt.secret);
 
-            const {id, roles} = decoded as ITokenDecode;
+            // const {id, roles} = decoded as ITokenDecode;
 
-            req.user =  {id, roles};
+            // req.user =  {id, roles};
+            req.user = checkRealToken(token);
           } catch (error) {
             const err = error as errorGenericType;
             loggerApp.error(`Exception on checkToken into jwt.verify: ${err.message}`);
             next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
           }
-            return next();
+
+          return next();
         }
       }
 

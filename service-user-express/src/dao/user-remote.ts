@@ -285,7 +285,7 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
     }
 
     async deleteAll(): Promise<void> {
-        await this.model.deleteMany();
+        await this.model.deleteMany({});
     }
 
 }

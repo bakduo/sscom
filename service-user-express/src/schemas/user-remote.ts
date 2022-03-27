@@ -24,7 +24,12 @@ export const SchemaUserRemote = new Schema<IUserRemote>({
         trim: true,
         unique: true,
         index: true,
-        dropDups: true
+        dropDups: true,
+        match: [
+            // eslint-disable-next-line no-useless-escape
+            /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g,
+            "Invalid email",
+          ],
       },  
     deleted:{
         type: Boolean,

@@ -58,13 +58,13 @@ export class ControllerServiceAuth {
             const encontrado = await userDAO.deleteOne({keycustom:'email',valuecustom:email.toLowerCase()});
     
             if (encontrado){
-                res.status(200).json({message:'User Deleted'});
+                return res.status(200).json({message:'User Deleted'});
             }
     
-            res.status(404).json({message:'user not found'});
+            return res.status(404).json({message:'user not found'});
         }
 
-        res.status(401).json({message:'User not have privileges'});
+        return res.status(401).json({message:'User not have privileges'});
         
     }
 
@@ -81,49 +81,56 @@ export class ControllerServiceAuth {
  
     postLogout = async (req:Request,res:Response,next:NextFunction) =>{
 
-        const { token } = req.body;
+        try {
 
-        const existe = await tokenDAO.findOne({keycustom:'token',valuecustom:token});
+            const { token } = req.body;
 
-        if (isValidToken(existe)){
-
-            try {
-
-                const deleted = await tokenDAO.deleteOne({keycustom:'token',valuecustom:token});
-    
-                if (deleted){
-                    return  res.status(200).json({message:"Logout successful"});
+            const existe = await tokenDAO.findOne({keycustom:'token',valuecustom:token});
+        
+            if (isValidToken(existe)){
+        
+                try {
+        
+                    const deleted = await tokenDAO.deleteOne({keycustom:'token',valuecustom:token});
+        
+                    if (deleted){
+                        return  res.status(200).json({message:"Logout successful"});
+                    }
+        
+                    return res.status(404).json({message:"Logout don't found token for delete"});
+        
+                }catch(error){
+        
+                    const err = error as errorGenericType;
+                    
+                    loggerApp.error(`Exception on postLogout into jwt.deleteOne: ${err.message}`);
+                    
+                    return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
+        
                 }
-    
-                return res.status(404).json({message:"Logout don't found token for delete"});
-
-            }catch(error){
-
-                const err = error as errorGenericType;
-                
-                loggerApp.error(`Exception on postLogout into jwt.deleteOne: ${err.message}`);
-                
-                return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
-
+        
+                //tokenDAO.deleteOne({keycustom:'token',valuecustom:token})
+                // .then((status)=>{
+                //     if (status){
+                //         return  res.status(200).json({message:"Logout successful"});
+                //     }
+                //     return  res.status(404).json({message:"Logout don't found token for delete"});
+                //})
+                // .catch((error)=>{
+                //     const err = error as errorGenericType;
+                //     loggerApp.error(`Exception on postLogout into jwt.deleteOne: ${err.message}`);
+                //     return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
+                //})
+        
             }
-
-            //tokenDAO.deleteOne({keycustom:'token',valuecustom:token})
-            // .then((status)=>{
-            //     if (status){
-            //         return  res.status(200).json({message:"Logout successful"});
-            //     }
-            //     return  res.status(404).json({message:"Logout don't found token for delete"});
-            //})
-            // .catch((error)=>{
-            //     const err = error as errorGenericType;
-            //     loggerApp.error(`Exception on postLogout into jwt.deleteOne: ${err.message}`);
-            //     return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
-            //})
-
+        
+            return  res.status(404).json({message:"Logout don't found token for delete"});
+            
+            
+        } catch (error) {
+            next(error);
         }
-
-        return  res.status(404).json({message:"Logout don't found token for delete"});
-     
+        
     }
 
     postSignup = async (req:Request,res:Response,next:NextFunction) =>{
