@@ -1,10 +1,9 @@
-import { isValidToken } from './../util/validToken';
 import {Request, Response, NextFunction} from 'express';
-import { IUserToken } from '../interfaces/custom';
-import { isValidUser } from '../util/validuser';
-import { errorGenericType } from '../interfaces/error';
-import { ERRORS_APP, loggerApp, userDAO, tokenDAO } from '../init/configure';
-import { ETokenInvalid } from '../middleware/check-sign-token';
+import { userDAO, tokenDAO, loggerApp, ERRORS_APP } from '../init';
+import { IUserToken, errorGenericType } from '../interfaces';
+import { ETokenInvalid } from '../middleware';
+import { isValidUser } from '../util';
+import { isValidToken } from '../util/validToken';
 
 export class ControllerServiceAuth {
 

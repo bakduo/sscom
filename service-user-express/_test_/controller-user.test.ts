@@ -1,8 +1,8 @@
 import * as chai from 'chai';
-import { app } from './../src/main';
 import supertest from "supertest";
 import faker from '@faker-js/faker';
-import { userDAO, tokenDAO } from '../src/init/configure';
+import { app } from '../src/main';
+import { userDAO, tokenDAO, loadUserDAO } from '../src/init/configure';
 
 const request = supertest(app);
 
@@ -18,6 +18,8 @@ describe('Test controller UNIT',async () => {
 
 
     before(async function(){
+
+        await loadUserDAO();
         
         console.log("###############BEGIN TEST Controller#################");
 

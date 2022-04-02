@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rm -rf dist/ && tsc",
     "dev": "cross-env NODE_ENV='development' nodemon bin/run.ts",
+    "devjs": "cross-env NODE_ENV='development' npm run build && nodemon dist/bin/run.js",
     "test": "cross-env NODE_ENV='development' mocha -r ts-node/register --watch-extensions ts --colors _test_/*.ts --reporter mochawesome --timeout 15000 --exit",
     "pre-loading": "ts-node loading/generate-users.ts",
     "stress:register": "artillery run loading/config.yml --output loading/test-register.json",
@@ -22,6 +23,7 @@
     "@types/pino": "^7.0.5",
     "@types/pino-multi-stream": "^5.1.3",
     "bcrypt": "^5.0.1",
+    "class-validator": "^0.13.2",
     "config": "^3.3.7",
     "connect-memcached": "^1.0.0",
     "cross-env": "^7.0.3",
@@ -39,6 +41,9 @@
     "pino-multi-stream": "^6.0.0",
     "pino-tee": "^0.3.0",
     "pm2": "^5.2.0",
+    "reflect-metadata": "^0.1.13",
+    "sqlite3": "^5.0.2",
+    "typeorm": "^0.3.4",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

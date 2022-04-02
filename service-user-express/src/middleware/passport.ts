@@ -1,17 +1,13 @@
-
 import passport from "passport";
 import passportLocal from "passport-local";
-
-import { errorGenericType } from "../interfaces";
-import { appconfig, loggerApp, ERRORS_APP, userDAO, tokenDAO } from '../init/configure';
-import { validateUser } from '../util/validuser';
 import bcrypt from 'bcrypt';
-import { isValidPassword } from "../util";
 import jwt from 'jsonwebtoken';
-import { EBase } from "../interfaces/custom";
+import { ITokenDTO } from "../dto";
+import { userDAO, ERRORS_APP, loggerApp, tokenDAO, appconfig } from "../init";
+import { EBase, errorGenericType } from "../interfaces";
+import { validateUser, isValidPassword } from "../util";
 import { checkRealToken } from "../util/validToken";
-import { ETokenInvalid } from "./check-sign-token";
-import { ITokenDTO } from '../dto/tokenDTO';
+
 
 const LocalStrategy = passportLocal.Strategy;
 
@@ -211,4 +207,3 @@ export const initPassport = ()=>{
     }));
         
 }
-

@@ -5,3 +5,4 @@ export interface ITokenDTO {
     date?:number;
     timestamp?:number;
 }
+

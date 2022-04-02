@@ -1,7 +1,8 @@
 
-import { IUserDTO } from '../dto/userDTO';
 
 import * as Joi from 'joi';
+import { IUserDTO } from '../dto';
+
 
 export const isValidUser = (user:IUserDTO):boolean =>{
       

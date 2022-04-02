@@ -1,15 +1,16 @@
 import * as chai from 'chai';
-import { tokenDAO } from '../src/init/configure';
+
 import faker from '@faker-js/faker';
-import { errorGenericType } from '../src/interfaces';
+import { tokenDAO } from '../src/init/configure';
+import { errorGenericType } from '../src/interfaces/error';
+
 const expect = chai.expect;
 
 describe('Test TokenDAO UNIT',async () => {
 
     before(async function(){
 
-        console.log("###############BEGIN TEST TokenDAO#################");
-        
+        console.log("###############BEGIN TEST TokenDAO#################");        
         await Promise.all([
             tokenDAO.saveOne({token:faker.internet.password(35),email:faker.internet.email(),tmptoken:faker.internet.password(33)}),
             tokenDAO.saveOne({token:faker.internet.password(35),email:faker.internet.email(),tmptoken:faker.internet.password(33)}),

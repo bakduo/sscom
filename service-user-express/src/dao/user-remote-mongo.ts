@@ -1,13 +1,11 @@
-import { SchemaUserRemote } from './../schemas/user-remote';
-import { IGenericDB, IsearchItem, IPassword } from './generic';
 import { Model, Connection } from 'mongoose';
-import { IPasswordDTO, IUserDTO } from '../dto/userDTO';
-import { loggerApp, appconfig } from '../init/configure';
-import { errorGenericType } from '../interfaces';
-import { IKeyValue, TDeletedMongo } from '../interfaces/custom';
 import { IMongoConnect } from '../datastore';
+import { IPasswordDTO, IUserDTO } from '../dto';
+import { loggerApp, appconfig } from '../init';
+import { errorGenericType, IKeyValue, NoUserRemote, TDeletedMongo } from '../interfaces';
+import { SchemaUserRemote } from '../schemas';
+import { IPassword, IsearchItem, IGenericDB } from './generic';
 import { IUserRemote } from './Iuser-remote';
-
 
 export class MongoUserPassword implements IPassword<IPasswordDTO> {
 
@@ -27,25 +25,6 @@ export class MongoUserPassword implements IPassword<IPasswordDTO> {
 
        throw new Error(`Exception on findPassword into MongoDB`);
     }
-}
-
-class NoUserRemote implements IUserDTO {
-
-    email: string;
-    deleted: boolean;
-    username:string;
-    password: string;
-    roles: string[];
-    _id?:string | undefined;
-
-    constructor(){
-        this.email = '';
-        this.deleted = false;
-        this.password = '';
-        this.roles = [];
-        this.username = '';
-    }
-   
 }
 
 export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {

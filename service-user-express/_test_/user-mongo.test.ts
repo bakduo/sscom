@@ -1,16 +1,21 @@
 import * as chai from 'chai';
-import { userDAO } from '../src/init/configure';
 import faker from '@faker-js/faker';
-import { errorGenericType } from '../src/interfaces';
+import { loadUserDAO, userDAO } from '../src/init/configure';
+import { errorGenericType } from '../src/interfaces/error';
 
 const expect = chai.expect;
 
 describe('Test UserDAO UNIT',async () => {
 
+    
+
     before(async function(){
+
+        await loadUserDAO();
 
         console.log("###############BEGIN TEST UserDAO#################");
 
+    
         await Promise.all([
             userDAO.saveOne({email:faker.internet.email(),deleted:false,roles:['user'],username:faker.internet.userName(),password:"sample"}),
             userDAO.saveOne({email:faker.internet.email(),deleted:false,roles:['user'],username:faker.internet.userName(),password:"sample"}),
@@ -66,13 +71,14 @@ describe('Test UserDAO UNIT',async () => {
 
             const listaUser = await userDAO.getAll();
             
-            await userDAO.updateOne(listaUser[3].email,{email:listaUser[3].email,deleted:false,roles:['admin'],username:faker.internet.userName(),password:"sample"});
-            
+            await userDAO.updateOne(listaUser[3].email,{email:listaUser[3].email,deleted:false,roles:['admin','user'],username:faker.internet.userName(),password:"sample"});
+    
             const user = await userDAO.findOne({keycustom:'email',valuecustom:listaUser[3].email});
             
             expect(user).to.be.an('object');
             expect(user).to.have.property('email');
             expect(user.password).to.equal(listaUser[3].password);
+            expect(user.roles).to.be.an('array');
             expect(user.roles[0]).to.equal("admin");
 
         });
@@ -85,7 +91,7 @@ describe('Test UserDAO UNIT',async () => {
                 await userDAO.saveOne({email:listaUser[0].email,deleted:false,roles:['admin'],username:faker.internet.userName(),password:"sample"});    
             } catch (error:unknown) {
                 const err = error as errorGenericType;
-                expect(err.message).to.contain("Exception on saveOne into MongoDB E11000 duplicate key error collection");
+                expect(err.message).to.contain("Exception on saveOne into");
             }
             
         });

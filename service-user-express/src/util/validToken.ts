@@ -1,13 +1,11 @@
 
-import { ITokenDTO } from '../dto/tokenDTO';
 import jwt from 'jsonwebtoken';
-import { appconfig} from '../init/configure';
-import { ITokenDecode } from '../interfaces/custom';
-
+import { ITokenDTO } from '../dto';
+import { appconfig } from '../init';
+import { ITokenDecode } from '../interfaces';
 
 export const isValidToken = (tokenRemote:ITokenDTO):boolean =>{
 
-  
     if (tokenRemote.token.length<=0){
       return false;
     }
@@ -24,4 +22,3 @@ export const checkRealToken = (token:string) => {
     return {id, roles};
 
 }
-

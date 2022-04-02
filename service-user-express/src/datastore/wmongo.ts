@@ -17,7 +17,7 @@ export class NoMongoConnect implements IMongoConnect {
     
 }
 
-export default class MongoConnect implements IMongoConnect {
+export class MongoConnect implements IMongoConnect {
 
     private url:string;
 

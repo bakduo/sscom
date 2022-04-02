@@ -1,6 +1,5 @@
 import { Schema } from 'mongoose';
-import { IUserRemote } from '../dao';
-
+import { IUserRemote } from '../dao/Iuser-remote';
 
 export const SchemaUserRemote = new Schema<IUserRemote>({
     username: {
@@ -29,7 +28,7 @@ export const SchemaUserRemote = new Schema<IUserRemote>({
             // eslint-disable-next-line no-useless-escape
             /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g,
             "Invalid email",
-          ],
+          ]
       },  
     deleted:{
         type: Boolean,

@@ -1,3 +1,5 @@
+import { IUserDTO } from "../dto/userDTO.js";
+
 export interface ITokenDecode {
     id:string;
     roles:string[];
@@ -60,4 +62,23 @@ export class EBase extends Error {
     getDetail(){
         return this.detail;
     }
+}
+
+export class NoUserRemote implements IUserDTO {
+
+    email: string;
+    deleted: boolean;
+    username:string;
+    password: string;
+    roles: string[];
+    _id?:string | undefined;
+
+    constructor(){
+        this.email = '';
+        this.deleted = false;
+        this.password = '';
+        this.roles = [];
+        this.username = '';
+    }
+   
 }

@@ -3,10 +3,8 @@ import express from 'express';
 import {Request, Response, NextFunction} from 'express';
 
 import passport from "passport";
-
-import { errorTypeMiddleware } from './interfaces/error';
-
-import { routerGlobal } from './routes/service-user';
+import { errorTypeMiddleware, errorGenericType } from './interfaces';
+import { routerGlobal } from './routes';
 
 export const app = express();
 
@@ -29,11 +27,14 @@ app.use((req:Request, res:Response)=> {
 //Error Handler
 app.use((err:errorTypeMiddleware, req:Request, res:Response, next:NextFunction)=> {
     
-    if (err?.getHttpCode()){
-
-        return res.status(err.getHttpCode()).json({message:`${err.message} ${err.getDetail()}`});
+    try {
+        if (err?.getHttpCode()){
+            return res.status(err.getHttpCode()).json({message:`${err.message} ${err.getDetail()}`});
+        } 
+        return res.status(500).json({message:`${err.message}`});
+    } catch (error:unknown) {
+        const err = error as errorGenericType;
+        return res.status(500).json({message:`${err.message}`});
     }
 
-    return res.status(500).json({message:`${err.message}`});
-
-});  
+});

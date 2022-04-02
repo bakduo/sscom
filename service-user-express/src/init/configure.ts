@@ -2,8 +2,11 @@ import config from 'config';
 import pino from "pino";
 import stream from 'stream';
 import childProcess from 'child_process';
-import { FUserDAO, FTokenDAO } from '../dao/fdao';
-import { string } from 'joi';
+import { IGenericDB, FUserDAO, FTokenDAO } from '../dao';
+import { configORM } from '../datastore';
+import { IUserDTO } from '../dto';
+import { ITokenDTO } from '../dto/tokenDTO';
+
 
 const logThrough = new stream.PassThrough();
 
@@ -86,8 +89,36 @@ export const ERRORS_APP = {
     },
 }
 
-export interface IConfigDB {
+
+export interface IEntityAutoORM {
+    [key:string]:string;
+    value:string
+}
+
+interface IConfigDB {
     db:{
+        sql:{
+            config:{
+              mysql:{
+                username:string,
+                passwd:string,
+                port:number,
+                host:string,
+                database:string
+              },
+              postgres:{
+                username:string,
+                passwd:string,
+                port:number,
+                host:string,
+                database:string
+              },
+              sqlite:{
+                database:string,
+                path:string
+              }
+            }
+        },
         mongo:{
             urlreplica:string;
             url:string;
@@ -113,14 +144,57 @@ export interface IConfigDB {
     persistence:{
         replicaset:boolean;
         transaction:boolean;
-        type:string;
+        type:[IEntityAutoORM];
         mongo:boolean;
         memory:boolean;
+        sql:boolean;
     }
 }
 
 export const appconfig:IConfigDB = config.get('app');
 
-export const userDAO = FUserDAO.getInstance(appconfig.persistence.type).build();
+export let userDAO:IGenericDB<IUserDTO>;
 
-export const tokenDAO = FTokenDAO.getInstance(appconfig.persistence.type).build();
+export let tokenDAO:IGenericDB<ITokenDTO>;
+
+export const loadUserDAO = async () =>{
+
+    const waiting = appconfig.persistence.type.map(async (item:IEntityAutoORM)=>{
+
+        const {key,value} = item;
+
+        switch (value) {
+
+            case "sqlite" || "mysql" || "postgress":
+
+                await configORM(value);
+
+                switch (key) {
+                    case "userremote":
+                        userDAO = FUserDAO.getInstance(value).build();
+                        break;
+                    default:
+
+                        break;
+                }
+
+                break;
+
+            case "mongo":
+                switch (key) {
+                    case "token":
+                        tokenDAO = FTokenDAO.getInstance(value).build();
+                        break;
+                    case "userremote":
+                        userDAO = FUserDAO.getInstance(value).build();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+    });
+
+    await Promise.all(waiting);
+
+}

@@ -1,9 +1,8 @@
 import {Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
-import { appconfig, ERRORS_APP, loggerApp, tokenDAO } from '../init/configure';
-import { EBase, ITokenDecode } from '../interfaces/custom';
-import { errorGenericType } from '../interfaces';
-import { checkRealToken, isValidToken } from '../util/validToken';
+import { tokenDAO, appconfig, loggerApp, ERRORS_APP } from '../init';
+import { EBase, ITokenDecode, errorGenericType } from '../interfaces';
+import { isValidToken, checkRealToken } from '../util/validToken';
 
 export class ETokenInvalid extends EBase {
 

@@ -1,16 +1,20 @@
-import MongoConnect from "../src/datastore/wmongo";
-import { appconfig, loggerApp } from "../src/init/configure";
-import { app } from "../src/main";
+import { MongoConnect } from './../src/datastore/wmongo';
+import { appconfig, loggerApp, loadUserDAO } from '../src/init/configure';
+import { app } from '../src/main';
 
 const puerto = appconfig.port || 8080;
 
-const server = app.listen(puerto, () => {
+const server = app.listen(puerto, async () => {
+
+    await loadUserDAO();
+    
     console.log(`servidor escuchando en http://localhost:${puerto}`);
 });
 
 server.on('error', error => {
     console.log('error en el servidor:', error);
 });
+
 
 process.on('SIGINT', function() {
 
@@ -27,7 +31,7 @@ process.on('SIGINT', function() {
             DB.getConnection().close(function(err:unknown) {
                 loggerApp.debug("Close DB..");
                 process.exit(err ? 1 : 0);
-              });
+            });
     }
     
     process.exit(0);

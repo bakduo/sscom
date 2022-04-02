@@ -6,4 +6,5 @@ export interface IUserRemote {
     password:string;
     roles:string[];
     _id?:string;
+    id?:number;
 }

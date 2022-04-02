@@ -1,14 +1,14 @@
-import { SchemaToken } from './../schemas/token';
-import { Model, Connection } from 'mongoose';
-import { ITokenDTO } from '../dto/tokenDTO';
-import { loggerApp } from '../init/configure';
-import { IGenericDB, IsearchItem } from "./generic";
-import { IToken } from './IToken';
-import { errorGenericType } from '../interfaces';
-import { IKeyValue } from '../interfaces/custom';
-import { IMongoConnect } from '../datastore';
 
-class NoToken implements IToken {
+import { Model, Connection } from 'mongoose';
+import { IMongoConnect } from '../datastore';
+import { ITokenDTO } from '../dto';
+import { loggerApp } from '../init';
+import { errorGenericType, IKeyValue } from '../interfaces';
+import { SchemaToken } from '../schemas';
+import { IGenericDB, IsearchItem } from './generic';
+import { IToken } from './IToken';
+
+export class NoToken implements IToken {
 
     token: string;
     date: number;
@@ -23,8 +23,6 @@ class NoToken implements IToken {
         this.tmptoken = '';
         this.email = '';
     }
-  
-   
 }
 
 export class MongoTokenDao implements IGenericDB<ITokenDTO> {
@@ -180,5 +178,3 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
     }
 
 }
-
-    

@@ -28,8 +28,9 @@ Roadmap
 - [X] storage Mongo.
 - [X] JWT secure
 - [X] Authorization + Authentication.
-- [X] Test stress by artillery Ok with > 1K User.
+- [X] Test stress by Artillery Ok with > 1K User.
 - [X] Add support replicaset Mongo by parameter and transaction.
+- [X] Add support TypeORM
 
 Necesario tener inject config/environment.json y estructura folder data/store.json
 
