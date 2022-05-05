@@ -7,6 +7,7 @@ export interface IExceptionClient extends Error {
 
 export interface CustomWebSocket extends WebSocket{
     isAlive?:boolean;
+    remote?:string;
     exception?:IExceptionClient;
 }
 

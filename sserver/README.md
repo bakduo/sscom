@@ -11,5 +11,7 @@ The goal is permit connect between the different browser by WebSocket. With App 
 - [X] Add support cipher for browser, desktop and service cloud
 - [X] Add report mochawesome and testing coverage
 - [X] Add pico log stream
+- [X] Check seudo client operations.
+- [X] Add all initial testing infraestructure
 - [] maybe fastify future?
 - [] multi server

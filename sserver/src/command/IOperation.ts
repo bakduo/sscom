@@ -4,12 +4,13 @@ import { CustomWebSocket, IResponseClient } from "../interfaces";
 import { WebSocketServer } from 'ws';
 import { IHashCiper } from '../utils/cipher';
 import { MessagePayload, MessageType } from '../payload/message';
-
+import { v4 as uuidv4 } from 'uuid';
+import { nodeDAO } from '../initconfig/configure';
 export interface IOperationSocket {
     
     getName():string;
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string):void;
+    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string):Promise<void>;
 }
 
 export interface ISendPayload {
@@ -182,7 +183,9 @@ export class OperationNotExist implements IOperationSocket{
         this.code = _ope.code || -1;
         this.message = _ope.message || '';
     }
-    exec(client:CustomWebSocket): void {
+
+    async exec(client:CustomWebSocket): Promise<void> {
+        console.log("Execute operation not support");
         throw new Error(`OperationNotExist: ${this.message} ${this.code}`);
     }
 
@@ -207,7 +210,7 @@ export class FakeCmd implements IOperationSocket {
         this.name = 'FakeCmd'
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
         console.log("Execute ope Fake command");
     }
 
@@ -225,9 +228,9 @@ export class FinishCmd implements IOperationSocket {
         this.name = 'Finished'
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
         console.log("Execute ope", this.name);
-        this.terminate(client);
+        return Promise.resolve(this.terminate(client));
     }
 
     getName(): string {
@@ -243,6 +246,104 @@ export class FinishCmd implements IOperationSocket {
        }
     }
 }
+export class ConnectCmd implements IOperationSocket {
+    
+    name:string;
+
+    constructor(){
+        this.name = 'Connect';
+    }
+
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
+        console.log("Execute ope: ",this.name);
+
+        if (client.isAlive){
+            //client.remote = client.remote + uuidv4();
+
+            const typeClient = remote || '';
+
+            const response = ReponsePayload.getInstance().generate(typeClient);
+
+            const clientResponse = {
+                id:client.remote,
+                status:true,
+                oper:this.name
+            }
+
+            const payloadOb = new MessagePayload("response",clientResponse,remote);
+
+            Promise.resolve(response.send(payloadOb.toSerialize(),client));
+        }
+        
+    }
+
+    getName(): string {
+        return this.name;
+    }
+}
+export class CheckClientCmd implements IOperationSocket {
+    
+    name:string;
+
+    constructor(){
+        this.name = 'CheckClient';
+    }
+
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
+
+        console.log("Execute ope: ",this.name);
+
+        if (client.isAlive){
+
+            if (client.remote === body.id){
+
+                console.log("OK cliente");
+                //await nodeDAO.saveOne(item);
+
+                const clientRemote = remote || 'default';
+
+                const response = ReponsePayload.getInstance().generate(clientRemote);
+
+                const payloadOb = new MessagePayload("response",{capture:true,oper:"Ready"},clientRemote);
+
+                Promise.resolve(response.send(payloadOb.toSerialize(),client));
+
+            }
+        }
+    }
+
+    getName(): string {
+        return this.name;
+    }
+}
+
+export class AcceptCmd implements IOperationSocket {
+    
+    name:string;
+
+    constructor(){
+        this.name = 'Accept';
+    }
+
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
+
+        console.log("Execute ope: ",this.name);
+
+        if (client.isAlive){
+
+            const item = {
+                uuid: body.identifier,
+                delete: false
+            }
+
+            await nodeDAO.saveOne(item);
+        }
+    }
+
+    getName(): string {
+        return this.name;
+    }
+}
 
 export class BroadcastCmd implements IOperationSocket {
     
@@ -252,13 +353,13 @@ export class BroadcastCmd implements IOperationSocket {
         this.name = 'Broadcast';
     }
 
-    exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): void {
+    async exec(client:CustomWebSocket,server?:WebSocketServer,body?:any,remote?:string): Promise<void> {
+
         console.log("Execute ope: ",this.name);
         
         if (!!server) {
-            this.forward(server,body,remote || "nobody");
+            Promise.resolve(this.forward(server,body,remote || "nobody"));
         }
-        
     }
 
     getName(): string {
@@ -308,10 +409,8 @@ export class JoinCmd implements IOperationSocket {
             const response = ReponsePayload.getInstance().generate(remote);
 
             const payloadObj = new MessagePayload("Join",{status:ok,detail:''},remote);
-            
-            //SendPayloadBrowser.getInstance().send(payloadObj.toSerialize(),client);
 
-            response.send(payloadObj.toSerialize(),client);
+            Promise.resolve(response.send(payloadObj.toSerialize(),client));
 
         }
         

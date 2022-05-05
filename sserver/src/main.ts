@@ -4,9 +4,11 @@ import { IPayloadMessage, IMessage, IExceptionExec } from './interfaces/payload'
 //import { createServer } from 'https';
 import { createServer, IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
-import * as fs from 'fs';
-import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd } from './command/IOperation';
-import { appconfig, loggerApp } from './initconfig/configure';
+//import * as fs from 'fs';
+import { ManagerOperation, FinishCmd, FakeCmd, IOperationSocket, BroadcastCmd, ConnectCmd, ReponsePayload, CheckClientCmd } from './command/IOperation';
+import { appconfig, loggerApp, nodeDAO } from './initconfig/configure';
+import { MessagePayload } from './payload';
+import { isStringObject } from 'util/types';
 
 //TODO SECURE CERTIFY
 // const serverHttps = createServer({
@@ -23,6 +25,9 @@ const clientRemote = new ClientConsumer();
 managerOp.addOperation(new FinishCmd());
 managerOp.addOperation(new FakeCmd());
 managerOp.addOperation(new BroadcastCmd());
+managerOp.addOperation(new ConnectCmd());
+managerOp.addOperation(new CheckClientCmd());
+
 
 function checkConnectionSocket(info:any,callback:CallableFunction){
   console.log("checkConnectionSocker");
@@ -43,13 +48,20 @@ const wss = new WebSocketServer(ServerOptionsTest);
 
 wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
 
-  //console.log(req.rawHeaders);
+  let keyHeader = "";
 
-  //console.log(req.socket.remoteAddress);
+  if ((req.rawHeaders[3]) && (typeof req.rawHeaders[3] === 'string')){
+    keyHeader = req.rawHeaders[3];
+  }else{
+    loggerApp.error("No existe parametros de comunicación de Socket");
+    throw new Error("No existe parametros de comunicación de Socket");
+  }
 
   connection.isAlive = true;
-  
-  connection.on('message', function message(payload, isBinary) {
+
+  connection.remote = keyHeader;
+
+  connection.on('message', async function message(payload, isBinary) {
  
     const message = isBinary ? payload : payload.toString();
 
@@ -66,10 +78,25 @@ wss.on('connection', function (connection:CustomWebSocket,req:IncomingMessage){
       const oper:IOperationSocket = managerOp.get(op);
 
       try {
-        oper.exec(connection,wss,body,client);
+
+        await oper.exec(connection,wss,body,client)
+      
       }catch (error:unknown) {
         const merror = error as IExceptionExec;
         loggerApp.error(merror.message);
+
+        const {client} = payloadObj.message as IMessage;
+
+        const typeClient = client || "default";
+
+        const response = ReponsePayload.getInstance().generate(typeClient);
+        const clientResponse = {
+            message:'Operation not support',
+            status:false
+        }
+
+        const payloadOb = new MessagePayload("response",clientResponse,typeClient);
+        response.send(payloadOb.toSerialize(),connection);
       }
     }
     

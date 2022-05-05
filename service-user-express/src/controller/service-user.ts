@@ -8,19 +8,18 @@ import { isValidToken } from '../util/validToken';
 export class ControllerServiceAuth {
 
 
-
     count = async (req:Request,res:Response,next:NextFunction)=>{
 
-        //const user = req.user as IUserToken;
+        const user = req.user as IUserToken;
 
-        //if (user.roles.includes('admin')){
+        if (user.roles.includes('admin')){
     
             const allUsers = await userDAO.getAll();
     
             return res.status(200).json({users:allUsers,cant:allUsers.length});
-        //}
+        }
 
-        //res.status(401).json({message:'User not have privileges'});
+        res.status(401).json({message:'User not have privileges'});
     }
 
 
@@ -107,20 +106,6 @@ export class ControllerServiceAuth {
                     return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
         
                 }
-        
-                //tokenDAO.deleteOne({keycustom:'token',valuecustom:token})
-                // .then((status)=>{
-                //     if (status){
-                //         return  res.status(200).json({message:"Logout successful"});
-                //     }
-                //     return  res.status(404).json({message:"Logout don't found token for delete"});
-                //})
-                // .catch((error)=>{
-                //     const err = error as errorGenericType;
-                //     loggerApp.error(`Exception on postLogout into jwt.deleteOne: ${err.message}`);
-                //     return next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
-                //})
-        
             }
         
             return  res.status(404).json({message:"Logout don't found token for delete"});

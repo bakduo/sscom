@@ -84,3 +84,4 @@ img/
 sserver/client
 sserver/config
 */node_modules
+mochawesome-report/
