@@ -297,14 +297,13 @@ export class CheckClientCmd implements IOperationSocket {
 
             if (client.remote === body.id){
 
-                console.log("OK cliente");
-                //await nodeDAO.saveOne(item);
+                console.log("checksum cliente");
 
                 const clientRemote = remote || 'default';
 
                 const response = ReponsePayload.getInstance().generate(clientRemote);
 
-                const payloadOb = new MessagePayload("response",{capture:true,oper:"Ready"},clientRemote);
+                const payloadOb = new MessagePayload("response",{status:true,oper:"Ready",id:client.remote},clientRemote);
 
                 Promise.resolve(response.send(payloadOb.toSerialize(),client));
 
