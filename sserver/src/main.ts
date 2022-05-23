@@ -30,8 +30,7 @@ managerOp.addOperation(new CheckClientCmd());
 
 
 function checkConnectionSocket(info:any,callback:CallableFunction){
-  console.log("checkConnectionSocker");
-  //console.log(info);
+  //TODO Verify
   //return cb(false, 401, "Unauthorized");
   callback(true);
 }
