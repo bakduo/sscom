@@ -7,8 +7,6 @@ const expect = chai.expect;
 
 describe('Test UserDAO UNIT',async () => {
 
-    
-
     before(async function(){
 
         await loadUserDAO();
@@ -30,7 +28,7 @@ describe('Test UserDAO UNIT',async () => {
         await userDAO.deleteAll();
     });
 
-    describe('Operaciones sobre User DAO mongo', async () => {
+    describe('Operaciones sobre User DAO', async () => {
 
         it('Debería agregar un user', async () => {
 

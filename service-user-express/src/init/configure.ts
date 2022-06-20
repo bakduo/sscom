@@ -3,10 +3,11 @@ import pino from "pino";
 import stream from 'stream';
 import childProcess from 'child_process';
 import { IGenericDB, FUserDAO, FTokenDAO } from '../dao';
-import { configORM } from '../datastore';
 import { IUserDTO } from '../dto';
 import { ITokenDTO } from '../dto/tokenDTO';
-
+import { initMUserRemoteInstance } from '../dao/sequelize/suser-remote-orm';
+import { configORM } from '../datastore/wsql';
+import { errorGenericType } from '../interfaces/error';
 
 const logThrough = new stream.PassThrough();
 
@@ -157,6 +158,8 @@ export let userDAO:IGenericDB<IUserDTO>;
 
 export let tokenDAO:IGenericDB<ITokenDTO>;
 
+const isDev = process.env.NODE_ENV === 'development'
+
 export const loadUserDAO = async () =>{
 
     const waiting = appconfig.persistence.type.map(async (item:IEntityAutoORM)=>{
@@ -166,14 +169,29 @@ export const loadUserDAO = async () =>{
         switch (value) {
 
             case "sqlite" || "mysql" || "postgress":
-
-                await configORM(value);
-
+            
                 switch (key) {
+
                     case "userremote":
+
+                        try {
+
+                            const AppDB = configORM(value);
+
+                            if (AppDB){
+                                
+                                initMUserRemoteInstance(AppDB);
+
+                                await AppDB.sync({force:isDev});
+                            }
+    
+                        } catch (error) {
+                            const err = error as errorGenericType;
+                            loggerApp.error(`Exception on constructor into ORM: ${err.message}`);
+                            throw new Error(`Error to Generated ORMUserRemote: ${err.message}`);
+                        }
+                             
                         userDAO = FUserDAO.getInstance(value).build();
-                        break;
-                    default:
 
                         break;
                 }

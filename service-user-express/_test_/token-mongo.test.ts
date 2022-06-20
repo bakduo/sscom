@@ -1,5 +1,4 @@
 import * as chai from 'chai';
-
 import faker from '@faker-js/faker';
 import { tokenDAO } from '../src/init/configure';
 import { errorGenericType } from '../src/interfaces/error';

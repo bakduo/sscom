@@ -1,11 +1,10 @@
-import { MongoConnect, AppDataSource } from "../datastore";
+import { MongoConnect } from "../datastore";
 import { IUserDTO, ITokenDTO } from "../dto";
 import { appconfig } from "../init/configure";
 import { IGenericDB } from "./generic";
 import { MongoTokenDao } from "./token-mongo";
 import { MongoUserRemoteDao } from "./user-remote-mongo";
 import { ORMUserRemote } from "./user-remote-orm";
-
 
 export class FUserDAO {
 
@@ -22,7 +21,6 @@ export class FUserDAO {
             FUserDAO.instance = new FUserDAO(type);
             return FUserDAO.instance;
         }
-
         return FUserDAO.instance;
     }
 
@@ -41,14 +39,10 @@ export class FUserDAO {
                     appconfig.db.mongo.secure,
                     appconfig.persistence.mongo));
                     break;
-            case "sqlite":                
-                try {
 
-                    newDAO = ORMUserRemote.getInstance(AppDataSource);
-                    
-                } catch (error) {
-                    throw new Error("Exception on Generate ORMUserRemote")
-                }
+            case "sqlite":                
+                
+                newDAO = ORMUserRemote.getInstance();
                 
                 break;
                 
