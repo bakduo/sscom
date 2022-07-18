@@ -8,6 +8,8 @@ import { ITokenDTO } from '../dto/tokenDTO';
 import { initMUserRemoteInstance } from '../dao/sequelize/suser-remote-orm';
 import { configORM } from '../datastore/wsql';
 import { errorGenericType } from '../interfaces/error';
+import { FactorySession } from '../datastore/session/fsession';
+import { ISessionStoreGeneric } from '../datastore/session/generic-session-store';
 
 const logThrough = new stream.PassThrough();
 
@@ -149,7 +151,34 @@ interface IConfigDB {
         mongo:boolean;
         memory:boolean;
         sql:boolean;
+    },
+    keycloak:{
+        enabled:boolean,
+        clientId: string,
+        bearerOnly: boolean,
+        serverUrl: string,
+        realm: string,
+        credentials: {
+            secret: string
+        }
+    },
+    session:{
+        type:string;
+        secret:string,
+        config:{
+            mongo:{
+                urlreplica:string;
+                url:string;
+                dbname:string;
+                host:string;
+                user:string;
+                password:string;
+                secure:boolean;
+                port:number;
+            }
+        }
     }
+
 }
 
 export const appconfig:IConfigDB = config.get('app');
@@ -158,7 +187,9 @@ export let userDAO:IGenericDB<IUserDTO>;
 
 export let tokenDAO:IGenericDB<ITokenDTO>;
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = process.env.NODE_ENV === 'development';
+
+export const sessionStore:ISessionStoreGeneric = FactorySession.getInstance();
 
 export const loadUserDAO = async () =>{
 

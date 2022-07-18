@@ -4,7 +4,12 @@ import { IToken } from '../dao';
 export const SchemaToken = new Schema<IToken>({
     email: {
         type: String,
-        required: true,
+        required: false,
+        unique: true,
+    },
+    username: {
+        type: String,
+        required: false,
         unique: true,
     },
     tmptoken: {

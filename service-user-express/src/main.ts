@@ -5,6 +5,10 @@ import {Request, Response, NextFunction} from 'express';
 import passport from "passport";
 import { errorTypeMiddleware, errorGenericType } from './interfaces';
 import { routerGlobal } from './routes';
+import { appconfig, sessionStore } from './init/configure';
+import session from 'express-session';
+import { routerKeycloak } from './routes/route-keycloak-auth';
+import { WKeycloak } from './middleware/wkeycloak';
 
 export const app = express();
 
@@ -18,6 +22,24 @@ app.use(passport.initialize());
 
 app.use('/api',routerGlobal);
 
+//Activa soporte para keycloak
+if (appconfig.keycloak.enabled){
+
+    //Necesario para poder utilizar Keycloak
+
+    app.use(session({
+        secret: appconfig.session.secret,
+        resave: false,
+        saveUninitialized: true,
+        store: sessionStore.getStore()
+    }));
+
+    const keycloak = WKeycloak.getInstanceKeycloak();
+
+    app.use(keycloak.middleware());
+
+    app.use('/api/auth-kc',routerKeycloak);
+}
 
 //Handler GET 404 for not found
 app.use((req:Request, res:Response)=> {
