@@ -185,12 +185,12 @@ export class OperationNotExist implements IOperationSocket{
     }
 
     async exec(client:CustomWebSocket): Promise<void> {
-        console.log("Execute operation not support");
+
         throw new Error(`OperationNotExist: ${this.message} ${this.code}`);
     }
 
     getName(): string {
-        throw new Error(`OperationNotExist: ${this.message} ${this.code}`);
+        throw new Error(`Get Name on: ${this.message} ${this.code}`);
     }
 
 }
@@ -450,7 +450,7 @@ export class ManagerOperation implements IManagerOperation {
     }
 
     get(op: string): IOperationSocket {
-
+        
         const opcmd = this.operations.find((item)=>{
             return item.getName()===op;
         });

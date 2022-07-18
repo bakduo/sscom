@@ -31,6 +31,7 @@ Roadmap
 - [X] Test stress by Artillery Ok with > 1K User.
 - [X] Add support replicaset Mongo by parameter and transaction.
 - [X] Add support TypeORM
+- [X] Add support Keycloak auth role + credential.
 
 Necesario tener inject config/environment.json y estructura folder data/store.json
 
