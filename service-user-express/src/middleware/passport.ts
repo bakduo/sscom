@@ -149,11 +149,11 @@ export const initPassport = ()=>{
                                 token:existeToken.tmptoken,
                                 refreshtoken:existeToken.token});
 
-                        } catch (error) {
-                            updateToken = true;
+                        } catch (error) {        
                             loggerApp.error(`Exception Token vencido se genera uno nuevo para el user: ${existeToken.email}`);
                         }
                     }
+                    updateToken = true;
                 }
 
              } catch (error) {
@@ -162,7 +162,6 @@ export const initPassport = ()=>{
                 return done(new EBase(`Exception on tokenDAO findOne into login: ${err.message}`,ERRORS_APP.EBase.code));
              }
              
-
             const token = jwt.sign(
                 {
                     id:encontrado.email,
@@ -184,9 +183,9 @@ export const initPassport = ()=>{
                 let tokenSaved:ITokenDTO;
 
                 if (updateToken){
-                    tokenSaved = await tokenDAO.updateOne(existeToken.token,{token:refreshToken,email:encontrado.email,tmptoken:token,date:Date.now()});
+                    tokenSaved = await tokenDAO.updateOne(existeToken.token,{token:refreshToken,email:encontrado.email,username:encontrado.email,tmptoken:token,date:Date.now()});
                 }else{
-                    tokenSaved = await tokenDAO.saveOne({token:refreshToken,email:encontrado.email,tmptoken:token,date:Date.now()});
+                    tokenSaved = await tokenDAO.saveOne({token:refreshToken,email:encontrado.email,username:encontrado.email,tmptoken:token,date:Date.now()});
                 }
 
                 if (tokenSaved){

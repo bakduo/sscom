@@ -54,11 +54,6 @@ export const checkToken = async (req:Request, res:Response, next:NextFunction) =
         
         if (token){
           try {
-            // const decoded = jwt.verify(token, appconfig.jwt.secret);
-
-            // const {id, roles} = decoded as ITokenDecode;
-
-            // req.user =  {id, roles};
             req.user = checkRealToken(token);
           } catch (error) {
             const err = error as errorGenericType;
