@@ -173,3 +173,6 @@ test.txt
 log/
 dist/
 loading/
+keycloak.json
+db/
+.vscode/
