@@ -32,6 +32,7 @@ Roadmap
 - [X] Add support replicaset Mongo by parameter and transaction.
 - [X] Add support TypeORM
 - [X] Add support Keycloak auth role + credential.
+- [X] update december 2022
 
 Necesario tener inject config/environment.json y estructura folder data/store.json
 
