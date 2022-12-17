@@ -72,7 +72,7 @@ export class ControllerServiceAuth {
 
             const user = req.user as IUserToken;
 
-            return res.status(200).json({ token: user.token, refresh: user.refreshtoken, fail: false });
+            return res.status(200).json({ token: user.token, refreshToken: user.refreshToken, fail: false });
         }
         return res.status(401).json({ fail: 'Error al realizar post login' });
     };
@@ -81,15 +81,15 @@ export class ControllerServiceAuth {
 
         try {
 
-            const { token } = req.body;
+            const user = req.user as IUserToken;
 
-            const existe = await tokenDAO.findOne({keycustom:'token',valuecustom:token});
+            const existe = await tokenDAO.findOne({keycustom:'token',valuecustom:user.token || ''});
         
             if (isValidToken(existe)){
         
                 try {
         
-                    const deleted = await tokenDAO.deleteOne({keycustom:'token',valuecustom:token});
+                    const deleted = await tokenDAO.deleteOne({keycustom:'token',valuecustom:user.token || ''});
         
                     if (deleted){
                         return  res.status(200).json({message:"Logout successful"});
@@ -119,8 +119,8 @@ export class ControllerServiceAuth {
 
     postSignup = async (req:Request,res:Response,next:NextFunction) =>{
 
-
         try {
+            
             const user = req.user as IUserToken;
             
             const {id,roles} = user;

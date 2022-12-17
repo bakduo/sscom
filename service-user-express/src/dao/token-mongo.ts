@@ -16,6 +16,7 @@ export class NoToken implements IToken {
     tmptoken: string;
     email?: string;
     username?: string;
+    refreshToken: string;
 
     constructor(){
         this.token = '';
@@ -23,6 +24,7 @@ export class NoToken implements IToken {
         this.timestamp = -1;
         this.tmptoken = '';
         this.email = '';
+        this.refreshToken = '';
         this.username = '';
     }
 }
@@ -65,9 +67,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             const item = await this.model.findOne(queryObj) || false;
             
             if (item){
-                const {token,tmptoken,email,username} = item;
+                const {token,tmptoken,refreshToken,email,username} = item;
     
-                return {token,tmptoken,email,username};
+                return {token,tmptoken,refreshToken,email,username};
             }    
         } catch (error) {
             const err = error as errorGenericType;
@@ -115,9 +117,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 
                 if (newItem){
                    
-                    const {token,email,tmptoken,username} = newItem;
+                    const {token,email,refreshToken,tmptoken,username} = newItem;
 
-                    return {token,email,tmptoken,username};
+                    return {token,email,tmptoken,refreshToken,username};
 
                 }    
                 
@@ -135,9 +137,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
         const allItems = await this.model.find();
         if (allItems){
             return allItems.map((item)=> {
-                const {token,email,date,tmptoken,username}  = item;
+                const {token,email,date,refreshToken,tmptoken,username}  = item;
 
-                return {token,email,date,tmptoken,username};
+                return {token,email,date,tmptoken,refreshToken,username};
             });
         }
 
@@ -160,9 +162,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             try {
                 if (updateItem){
                 
-                    const {token,email,tmptoken,username} = updateItem;
+                    const {token,email,refreshToken,tmptoken,username} = updateItem;
     
-                    return {token,email,tmptoken,username};
+                    return {token,email,tmptoken,refreshToken,username};
                 }
             } catch (error) {
                 const err = error as errorGenericType;

@@ -36,7 +36,6 @@ export class MongoConnect implements IMongoConnect {
                 pass:_pass,
                 autoIndex: true
               });
-        
     }
 
     getEnable(): boolean {

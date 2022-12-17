@@ -24,7 +24,7 @@ export interface IUserToken extends Express.User {
     password:string;
     roles:string[];
     token?:string;
-    refreshtoken?:string;
+    refreshToken?:string;
 }
 
 export interface IUserID extends Express.User {

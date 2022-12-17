@@ -1,6 +1,7 @@
 export interface ITokenDTO {
     token:string;
-    tmptoken:string;
+    refreshToken:string;
+    tmptoken?:string;
     email?:string;
     username?:string;
     date?:number;

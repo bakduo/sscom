@@ -22,7 +22,7 @@ routerGlobal.post('/logout',checkToken,controller.postLogout);
 
 routerGlobal.post('/find',checkToken,controller.search);
 
-routerGlobal.post('/count',controller.count);
+routerGlobal.post('/count',checkToken,controller.count);
 
 routerGlobal.delete('/delete',checkToken,controller.delete);
 

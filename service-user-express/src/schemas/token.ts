@@ -14,11 +14,17 @@ export const SchemaToken = new Schema<IToken>({
     },
     tmptoken: {
         type: String,
+        required: false,
+        unique: false,
+        dropDups: true
+    },
+    token: {
+        type: String,
         required: true,
         unique: true,
         dropDups: true
     },
-    token: {
+    refreshToken: {
         type: String,
         required: true,
         unique: true,

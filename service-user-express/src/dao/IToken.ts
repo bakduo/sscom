@@ -1,6 +1,7 @@
 export interface IToken {
     token:string;
-    tmptoken:string;
+    refreshToken: string,
+    tmptoken?:string;
     username?:string;
     email?:string;
     date:number;

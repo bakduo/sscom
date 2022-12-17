@@ -26,14 +26,25 @@ export const checkForRefreshToken = async (req:Request, res:Response, next:NextF
     }
 
     try {
-
+      
       const decoded = jwt.verify(token, appconfig.jwt.secretRefresh);
 
       const {id, roles} = decoded as ITokenDecode;
 
         const accessToken = jwt.sign({id, roles}, appconfig.jwt.secret, { expiresIn: appconfig.jwt.timeToken });
-  
-        req.user = {id, roles,accessToken};
+        
+        //Update refresh also
+
+        const refreshToken = jwt.sign({
+          id:id,
+          roles: roles,
+      }, appconfig.jwt.secretRefresh);
+
+        if (accessToken){
+          await tokenDAO.updateOne(token,{token:accessToken,refreshToken:refreshToken,email:existe.email,username:existe.email,tmptoken:'',date:Date.now()});
+        }
+
+        req.user = {id,roles};
   
         return next();  
 
@@ -54,7 +65,11 @@ export const checkToken = async (req:Request, res:Response, next:NextFunction) =
         
         if (token){
           try {
-            req.user = checkRealToken(token);
+            
+            const {id,roles} = checkRealToken(token);
+
+            req.user = {id,roles,token,email:'',username:'',password:'',refreshToken:''};
+
           } catch (error) {
             const err = error as errorGenericType;
             loggerApp.error(`Exception on checkToken into jwt.verify: ${err.message}`);

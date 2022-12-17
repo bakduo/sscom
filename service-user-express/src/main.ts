@@ -14,6 +14,14 @@ export const app = express();
 
 app.disable('x-powered-by');
 
+//Necesario para poder utilizar Keycloak y passport
+app.use(session({
+    secret: appconfig.session.secret,
+    resave: false,
+    saveUninitialized: true,
+    store: sessionStore.getStore()
+}));
+
 app.use(express.json({limit: '1mb'}));
 
 app.use(express.urlencoded({ limit: '1mb',extended: true }));
@@ -24,15 +32,6 @@ app.use('/api',routerGlobal);
 
 //Activa soporte para keycloak
 if (appconfig.keycloak.enabled){
-
-    //Necesario para poder utilizar Keycloak
-
-    app.use(session({
-        secret: appconfig.session.secret,
-        resave: false,
-        saveUninitialized: true,
-        store: sessionStore.getStore()
-    }));
 
     const keycloak = WKeycloak.getInstanceKeycloak();
 
@@ -50,7 +49,8 @@ app.use((req:Request, res:Response)=> {
 app.use((err:errorTypeMiddleware, req:Request, res:Response, next:NextFunction)=> {
     
     try {
-        if (err?.getHttpCode()){
+
+        if (err.getHttpCode()){
             return res.status(err.getHttpCode()).json({message:`${err.message} ${err.getDetail()}`});
         } 
         return res.status(500).json({message:`${err.message}`});

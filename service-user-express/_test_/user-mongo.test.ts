@@ -1,5 +1,5 @@
 import * as chai from 'chai';
-import faker from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { loadUserDAO, userDAO } from '../src/init/configure';
 import { errorGenericType } from '../src/interfaces/error';
 

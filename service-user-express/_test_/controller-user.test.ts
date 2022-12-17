@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 import supertest from "supertest";
-import faker from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { app } from '../src/main';
 import { userDAO, tokenDAO, loadUserDAO } from '../src/init/configure';
 
@@ -39,10 +39,10 @@ describe('Test controller UNIT',async () => {
 
         it('debería generar un usuario', async () => {  
 
-            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.internet.userName(),password:"sample"};
+            const user={email:"sample@dot.com",deleted:false,roles:['user'],username:faker.name.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
-            
+
             expect(response.status).to.eql(201);
 
             const responseUser = response.body;
@@ -56,7 +56,7 @@ describe('Test controller UNIT',async () => {
 
         it('debería generar un usuario admin', async () => {  
 
-            const user= {email:"admin@dot.com",deleted:false,roles:['admin'],username:faker.internet.userName(),password:"sample"};
+            const user= {email:"admin@dot.com",deleted:false,roles:['admin'],username:faker.name.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             
@@ -73,7 +73,7 @@ describe('Test controller UNIT',async () => {
 
         it('No debería generar un usuario repetido', async () => {  
 
-            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.internet.userName(),password:"sample"};
+            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.name.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             
@@ -101,15 +101,19 @@ describe('Test controller UNIT',async () => {
 
             tokenUser = responseUser.token;
                         
-            refreshTokenUser = responseUser.refresh;
+            refreshTokenUser = responseUser.refreshToken;
 
             expect(responseUser).to.be.a('object');
+
+            const parts = tokenUser.split('.');
+
+            expect(parts.length).to.eq(3);
             
-            expect(responseUser).to.include.keys('token','refresh','fail');
+            expect(responseUser).to.include.keys('token','refreshToken','fail');
 
             expect(responseUser.token).to.be.a('string');
             
-            expect(responseUser.refresh).to.be.a('string');
+            expect(responseUser.refreshToken).to.be.a('string');
             
             expect(responseUser.fail).to.be.a('boolean');
             
@@ -129,16 +133,20 @@ describe('Test controller UNIT',async () => {
             const responseUser = response.body;
 
             tokenAdmin = responseUser.token;
-                        
-            refreshTokenAdmin = responseUser.refresh;
+
+            refreshTokenAdmin = responseUser.refreshToken;
+
+            const parts = tokenAdmin.split('.');
+
+            expect(parts.length).to.eq(3);
 
             expect(responseUser).to.be.a('object');
             
-            expect(responseUser).to.include.keys('token','refresh','fail');
+            expect(responseUser).to.include.keys('token','refreshToken','fail');
 
             expect(responseUser.token).to.be.a('string');
             
-            expect(responseUser.refresh).to.be.a('string');
+            expect(responseUser.refreshToken).to.be.a('string');
             
             expect(responseUser.fail).to.be.a('boolean');
             
@@ -147,7 +155,7 @@ describe('Test controller UNIT',async () => {
         });
 
 
-        it('debería realizar login de un usuario de nuevo y retornar token valido', async () => {
+        it('debería realizar login de un usuario', async () => {
 
             const user= {email:"sample@dot.com",password:"sample"};
 
@@ -157,13 +165,21 @@ describe('Test controller UNIT',async () => {
 
             const responseUser = response.body;
 
+            tokenUser = responseUser.token;
+
+            refreshTokenUser = responseUser.refreshToken;
+
+            const parts = tokenUser.split('.');
+
+            expect(parts.length).to.eq(3);
+
             expect(responseUser).to.be.a('object');
             
-            expect(responseUser).to.include.keys('token','refresh','fail');
+            expect(responseUser).to.include.keys('token','refreshToken','fail');
 
             expect(responseUser.token).to.be.a('string');
             
-            expect(responseUser.refresh).to.be.a('string');
+            expect(responseUser.refreshToken).to.be.a('string');
             
             expect(responseUser.fail).to.be.a('boolean');
             
@@ -171,7 +187,11 @@ describe('Test controller UNIT',async () => {
 
             expect(responseUser.token).to.equal(tokenUser);
             
-            expect(responseUser.refresh).to.equal(refreshTokenUser);
+            expect(responseUser.refreshToken).to.equal(refreshTokenUser);
+
+            // expect(responseUser.token).not.equal(tokenUser);
+            
+            // expect(responseUser.refresh).not.equal(refreshTokenUser);
 
         });
 
@@ -196,6 +216,24 @@ describe('Test controller UNIT',async () => {
 
         });
 
+        it('debería realizar logout de un usuario', async () => {  
+            
+            const response = await request.post('/api/logout').set('Authorization',`Bearer ${tokenUser}`).send({token:refreshTokenUser});
+
+            expect(response.status).to.eql(200);
+
+            const responseUser = response.body;
+
+            expect(responseUser).to.be.a('object');
+            
+            expect(responseUser).to.include.keys('message');
+
+            expect(responseUser.message).to.be.a('string');
+            
+            expect(responseUser.message).to.equal("Logout successful");
+
+        });
+
         it('No debería eliminar un usuario sin privilegio', async () => {
             
             const response = await request.delete('/api/delete').set('Authorization',`Bearer ${tokenUser}`).send({email:"sample@dot.com"});
@@ -211,24 +249,6 @@ describe('Test controller UNIT',async () => {
             expect(responseUser.message).to.be.a('string');
             
             expect(responseUser.message).to.equal("User not have privileges");
-
-        });
-        
-        it('debería realizar logout de un usuario', async () => {  
-            
-            const response = await request.post('/api/logout').set('Authorization',`Bearer ${tokenUser}`).send({token:refreshTokenUser});
-            
-            expect(response.status).to.eql(200);
-
-            const responseUser = response.body;
-
-            expect(responseUser).to.be.a('object');
-            
-            expect(responseUser).to.include.keys('message');
-
-            expect(responseUser.message).to.be.a('string');
-            
-            expect(responseUser.message).to.equal("Logout successful");
 
         });
 
@@ -312,7 +332,7 @@ describe('Test controller UNIT',async () => {
 
         it('No debería generar un usuario', async () => {  
 
-            const user= {email:"sample",deleted:false,username:faker.internet.userName(),password:"sample"};
+            const user= {email:"sample",deleted:false,username:faker.name.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             

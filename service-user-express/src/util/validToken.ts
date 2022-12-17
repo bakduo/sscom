@@ -13,7 +13,7 @@ export const isValidToken = (tokenRemote:ITokenDTO):boolean =>{
     return true;
 }
 
-export const checkRealToken = (token:string) => {
+export const checkRealToken = (token:string):ITokenDecode => {
 
     const decoded = jwt.verify(token, appconfig.jwt.secret);
   

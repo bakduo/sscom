@@ -29,6 +29,7 @@ process.on('SIGINT', function() {
             appconfig.persistence.mongo);
 
             DB.getConnection().close(function(err:unknown) {
+                console.log("Close DB..");
                 loggerApp.debug("Close DB..");
                 process.exit(err ? 1 : 0);
             });

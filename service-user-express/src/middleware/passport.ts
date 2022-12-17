@@ -6,7 +6,7 @@ import { ITokenDTO } from "../dto";
 import { userDAO, ERRORS_APP, loggerApp, tokenDAO, appconfig } from "../init";
 import { EBase, errorGenericType } from "../interfaces";
 import { validateUser, isValidPassword } from "../util";
-import { checkRealToken } from "../util/validToken";
+import { checkRealToken, isValidToken } from '../util/validToken';
 
 
 const LocalStrategy = passportLocal.Strategy;
@@ -95,7 +95,7 @@ export const initPassport = ()=>{
                 const savedUsers = await userDAO.saveOne(newUser);
                 if (savedUsers){
                     const {email,roles} = savedUsers;
-                    return done(null,{id:email,roles,token:'',refreshtoken:''});
+                    return done(null,{id:email,roles,token:'',refreshToken:''});
                 }
             } catch (error) {
                 const err = error as errorGenericType;
@@ -116,7 +116,6 @@ export const initPassport = ()=>{
     passport.use('login',new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
         try {
 
-             let updateToken = false;
              let existeToken:ITokenDTO;
 
              const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
@@ -135,25 +134,21 @@ export const initPassport = ()=>{
                 
                 existeToken = await tokenDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
                 
-                if (existeToken){
-
-                    if (existeToken.email===email.toLowerCase()){
+                if (isValidToken(existeToken)){
 
                         try {
 
-                            checkRealToken(existeToken.tmptoken);
+                            checkRealToken(existeToken.token);
 
                             return done(null,{id:encontrado.email,
                                 username:encontrado.username,
                                 roles:encontrado.roles,
-                                token:existeToken.tmptoken,
-                                refreshtoken:existeToken.token});
+                                token:existeToken.token,
+                                refreshToken:existeToken.refreshToken ||''});
 
-                        } catch (error) {        
+                        }catch(error){
                             loggerApp.error(`Exception Token vencido se genera uno nuevo para el user: ${existeToken.email}`);
                         }
-                    }
-                    updateToken = true;
                 }
 
              } catch (error) {
@@ -162,34 +157,37 @@ export const initPassport = ()=>{
                 return done(new EBase(`Exception on tokenDAO findOne into login: ${err.message}`,ERRORS_APP.EBase.code));
              }
              
-            const token = jwt.sign(
-                {
-                    id:encontrado.email,
-                    roles: encontrado.roles,
-                },
-                appconfig.jwt.secret,
-                {
-                    expiresIn: appconfig.jwt.timeToken,
-                }
-                );
-
-            const refreshToken = jwt.sign({
-                id:encontrado.email,
-                roles: encontrado.roles,
-            }, appconfig.jwt.secretRefresh);
-
+            
             try {
 
-                let tokenSaved:ITokenDTO;
+               const token = jwt.sign(
+                    {
+                        id:encontrado.email,
+                        roles: encontrado.roles,
+                    },
+                    appconfig.jwt.secret,
+                    {
+                        expiresIn: appconfig.jwt.timeToken,
+                    }
+                    );
+    
+                const refreshToken = jwt.sign({
+                    id:encontrado.email,
+                    roles: encontrado.roles,
+                }, appconfig.jwt.secretRefresh);
+    
 
-                if (updateToken){
-                    tokenSaved = await tokenDAO.updateOne(existeToken.token,{token:refreshToken,email:encontrado.email,username:encontrado.email,tmptoken:token,date:Date.now()});
-                }else{
-                    tokenSaved = await tokenDAO.saveOne({token:refreshToken,email:encontrado.email,username:encontrado.email,tmptoken:token,date:Date.now()});
-                }
+                // if (updateToken){
+                //     tokenSaved = await tokenDAO.updateOne(existeToken.token,{token:refreshToken,email:encontrado.email,username:encontrado.email,tmptoken:token,date:Date.now()});
+                // }else{
+                //     tokenSaved = await tokenDAO.saveOne({token:token,email:encontrado.email,username:encontrado.email,tmptoken:'',date:Date.now()});
+                // }
+
+                const tokenSaved = await tokenDAO.saveOne({token:token,email:encontrado.email,username:encontrado.username,refreshToken:refreshToken,date:Date.now()});
 
                 if (tokenSaved){
-                    return done(null,{id:encontrado.email,username:encontrado.username,roles:encontrado.roles,token:token,refreshtoken:tokenSaved.token});
+
+                    return done(null,{id:encontrado.email,username:encontrado.username,roles:encontrado.roles,token:token,refreshToken:refreshToken});
                 }
 
             } catch (error) {
