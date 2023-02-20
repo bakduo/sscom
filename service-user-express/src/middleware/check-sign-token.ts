@@ -88,3 +88,39 @@ export const checkToken = async (req:Request, res:Response, next:NextFunction) =
       next(new EBase(`Exception on checkToken into middleware: ${err.message}`,ERRORS_APP.EBase.code));
     }
   };
+
+  export const checkTokenByRequest = async (req:Request, res:Response, next:NextFunction) => {
+    try {
+      
+      if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+
+        const token = req.headers.authorization.split(' ')[1];
+        
+        if (token){
+          try {
+            
+            const {id,roles} = checkRealToken(token);
+            if (id && roles.length > 0){
+              if (roles.includes('user') || roles.includes('admin')){
+                return res.status(200).json({token:{status:'valid'}})
+              }
+            }
+
+          } catch (error) {
+            const err = error as errorGenericType;
+            loggerApp.error(`Exception on checkToken into jwt.verify: ${err.message}`);
+            next(new ETokenInvalid(`Token Invalid user ${err.message}`,ERRORS_APP.ETokenInvalid.code,ERRORS_APP.ETokenInvalid.HttpStatusCode));
+          }
+
+          return next();
+        }
+      }
+
+     return res.status(401).json({ message: 'Operation failed, required authorization' });
+
+    } catch (error) {
+      const err = error as errorGenericType;
+      loggerApp.error(`Exception on checkToken into middleware: ${err.message}`);
+      next(new EBase(`Exception on checkToken into middleware: ${err.message}`,ERRORS_APP.EBase.code));
+    }
+  };

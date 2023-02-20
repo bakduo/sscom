@@ -216,6 +216,24 @@ describe('Test controller UNIT',async () => {
 
         });
 
+        it('debería realizar check de token valido', async () => {
+
+            const response = await request.post('/api/token-valid').set('Authorization',`Bearer ${tokenUser}`);
+            
+            expect(response.status).to.eql(200);
+
+            const responseUser = response.body;
+
+            expect(responseUser.token).to.be.a('object');
+
+            expect(responseUser.token).to.include.keys('status');
+
+            expect(responseUser.token.status).to.be.a('string');
+
+            expect(responseUser.token.status).to.equal("valid");
+
+        });
+
         it('debería realizar logout de un usuario', async () => {  
             
             const response = await request.post('/api/logout').set('Authorization',`Bearer ${tokenUser}`).send({token:refreshTokenUser});

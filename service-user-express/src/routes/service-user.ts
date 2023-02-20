@@ -4,7 +4,7 @@ import passport from 'passport';
 import {Request, Response, NextFunction} from 'express';
 import { ControllerServiceAuth } from '../controller/service-user';
 import { errorTypeMiddleware } from '../interfaces';
-import { initPassport, checkToken, checkForRefreshToken } from '../middleware';
+import { initPassport, checkToken, checkForRefreshToken, checkTokenByRequest } from '../middleware';
 
 export const routerGlobal = express.Router();
 
@@ -39,3 +39,5 @@ routerGlobal.get('/faillogin',(err:errorTypeMiddleware,req:Request,res:Response,
 routerGlobal.get('/profile',checkToken,controller.showProfile);
 
 routerGlobal.post('/token',checkForRefreshToken,controller.showProfile);
+
+routerGlobal.post('/token-valid',checkTokenByRequest);
