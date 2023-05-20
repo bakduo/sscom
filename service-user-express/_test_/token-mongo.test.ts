@@ -11,11 +11,11 @@ describe('Test TokenDAO UNIT',async () => {
 
         console.log("###############BEGIN TEST TokenDAO#################");        
         await Promise.all([
-            tokenDAO.saveOne({token:faker.internet.password(35),refreshToken:faker.internet.password(35),email:faker.internet.email(),username:faker.name.firstName(),tmptoken:faker.internet.password(33)}),
-            tokenDAO.saveOne({token:faker.internet.password(35),refreshToken:faker.internet.password(35),email:faker.internet.email(),username:faker.name.firstName(),tmptoken:faker.internet.password(33)}),
-            tokenDAO.saveOne({token:faker.internet.password(35),refreshToken:faker.internet.password(35),email:faker.internet.email(),username:faker.name.firstName(),tmptoken:faker.internet.password(33)}),
-            tokenDAO.saveOne({token:faker.internet.password(35),refreshToken:faker.internet.password(35),email:faker.internet.email(),username:faker.name.firstName(),tmptoken:faker.internet.password(33)}),
-            tokenDAO.saveOne({token:faker.internet.password(35),refreshToken:faker.internet.password(35),email:faker.internet.email(),username:faker.name.firstName(),tmptoken:faker.internet.password(33)}),
+            tokenDAO.saveOne({token:faker.internet.password({ length: 20 }) ,refreshToken:faker.internet.password({ length: 20 }),email:faker.internet.email(),username:faker.person.firstName(),tmptoken:faker.internet.password({ length: 27 })}),
+            tokenDAO.saveOne({token:faker.internet.password({ length: 20 }),refreshToken:faker.internet.password({ length: 20 }),email:faker.internet.email(),username:faker.person.firstName(),tmptoken:faker.internet.password({ length: 27 })}),
+            tokenDAO.saveOne({token:faker.internet.password({ length: 20 }),refreshToken:faker.internet.password({ length: 20 }),email:faker.internet.email(),username:faker.person.firstName(),tmptoken:faker.internet.password({ length: 27 })}),
+            tokenDAO.saveOne({token:faker.internet.password({ length: 20 }),refreshToken:faker.internet.password({ length: 20 }),email:faker.internet.email(),username:faker.person.firstName(),tmptoken:faker.internet.password({ length: 27 })}),
+            tokenDAO.saveOne({token:faker.internet.password({ length: 20 }),refreshToken:faker.internet.password({ length: 20 }),email:faker.internet.email(),username:faker.person.firstName(),tmptoken:faker.internet.password({ length: 27 })}),
         ]);
 
     });
@@ -29,9 +29,9 @@ describe('Test TokenDAO UNIT',async () => {
 
         it('Debería agregar un token', async () => {
 
-            const tokenTemp = faker.internet.password(35);
-            const refreshToken = faker.internet.password(35);
-            const item = await tokenDAO.saveOne({token:tokenTemp,refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password(33)});
+            const tokenTemp = faker.internet.password({ length: 20 });
+            const refreshToken = faker.internet.password({ length: 20 });
+            const item = await tokenDAO.saveOne({token:tokenTemp,refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password({ length: 27 })});
             expect(item).to.be.an('object');
             expect(item).to.have.property('token');
             expect(item).to.have.property('refreshToken');
@@ -68,11 +68,11 @@ describe('Test TokenDAO UNIT',async () => {
 
             const listaUser = await tokenDAO.getAll();
 
-            const tokenTemp = faker.internet.password(35);
-            const refreshToken = faker.internet.password(35);
+            const tokenTemp = faker.internet.password({ length: 20 });
+            const refreshToken = faker.internet.password({ length: 20 });
 
             
-            await tokenDAO.updateOne(listaUser[3].token,{token:tokenTemp,refreshToken:refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password(33)});
+            await tokenDAO.updateOne(listaUser[3].token,{token:tokenTemp,refreshToken:refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password({ length: 27 })});
             
             const tokenExist = await tokenDAO.findOne({keycustom:'token',valuecustom:tokenTemp});
             
@@ -87,7 +87,7 @@ describe('Test TokenDAO UNIT',async () => {
             const listaUser = await tokenDAO.getAll();
 
             try {
-                await tokenDAO.saveOne({token:listaUser[0].token,refreshToken:listaUser[0].refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password(33)});
+                await tokenDAO.saveOne({token:listaUser[0].token,refreshToken:listaUser[0].refreshToken,email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password({ length: 27 })});
             } catch (error:unknown) {
                 const err = error as errorGenericType;
                 expect(err.message).to.contain("Exception on saveOne into MongoDB E11000 duplicate key error collection");
@@ -98,7 +98,7 @@ describe('Test TokenDAO UNIT',async () => {
         it('Debería saltar exception por update que no existe', async () => {
 
             try {
-                await tokenDAO.updateOne('no existe',{token:'no existe',refreshToken:'',email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password(33)});    
+                await tokenDAO.updateOne('no existe',{token:'no existe',refreshToken:'',email:faker.internet.email(),username:faker.internet.email(),tmptoken:faker.internet.password({ length: 27 })});    
             } catch (error:unknown) {
                 const err = error as errorGenericType;
                 expect(err.message).to.contain("Exception on updateOne into MongoDB");

@@ -39,7 +39,7 @@ describe('Test controller UNIT',async () => {
 
         it('debería generar un usuario', async () => {  
 
-            const user={email:"sample@dot.com",deleted:false,roles:['user'],username:faker.name.fullName(),password:"sample"};
+            const user={email:"sample@dot.com",deleted:false,roles:['user'],username:faker.person.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
 
@@ -56,7 +56,7 @@ describe('Test controller UNIT',async () => {
 
         it('debería generar un usuario admin', async () => {  
 
-            const user= {email:"admin@dot.com",deleted:false,roles:['admin'],username:faker.name.fullName(),password:"sample"};
+            const user= {email:"admin@dot.com",deleted:false,roles:['admin'],username:faker.person.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             
@@ -73,7 +73,7 @@ describe('Test controller UNIT',async () => {
 
         it('No debería generar un usuario repetido', async () => {  
 
-            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.name.fullName(),password:"sample"};
+            const user= {email:"sample@dot.com",deleted:false,roles:['user'],username:faker.person.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             
@@ -350,7 +350,7 @@ describe('Test controller UNIT',async () => {
 
         it('No debería generar un usuario', async () => {  
 
-            const user= {email:"sample",deleted:false,username:faker.name.fullName(),password:"sample"};
+            const user= {email:"sample",deleted:false,username:faker.person.fullName(),password:"sample"};
 
             const response = await request.post('/api/signup').send(user);
             
