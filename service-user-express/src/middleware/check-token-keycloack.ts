@@ -2,10 +2,10 @@ import { loggerApp, ERRORS_APP, tokenDAO, appconfig } from '../init/configure';
 import { errorGenericType } from '../interfaces/error';
 import { ETokenInvalid } from './check-sign-token';
 import { NextFunction, Request, Response } from 'express';
-import { EBase } from '../interfaces/custom';
+import { EBase, IToken } from '../interfaces/custom';
 import { checkRealToken, isValidToken } from '../util/validToken';
 import jwt from 'jsonwebtoken';
-import { ITokenDTO } from '../dto/tokenDTO';
+//import { ITokenDTO } from '../dto/tokenDTO';
 
 interface IRequestKC extends Request {
   kauth?:any;
@@ -67,7 +67,8 @@ export const checkTokenKeycloak = async (req:Request, res:Response, next:NextFun
 
         const tokenDataKC:ITokenUserKC = req.kauth.grant.access_token.content;
 
-        const existeToken:ITokenDTO = await tokenDAO.findOne({keycustom:'email',valuecustom:tokenDataKC.email.toLowerCase()});
+        //const existeToken:ITokenDTO = await tokenDAO.findOne({keycustom:'email',valuecustom:tokenDataKC.email.toLowerCase()});
+        const existeToken:IToken = await tokenDAO.findOne({keycustom:'email',valuecustom:tokenDataKC.email.toLowerCase()});
 
         try {
                     

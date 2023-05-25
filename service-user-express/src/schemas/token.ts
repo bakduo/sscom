@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose';
-import { IToken } from '../dao';
+import { IToken } from '../interfaces';
+//import { IToken } from '../dao';
 
 export const SchemaToken = new Schema<IToken>({
     email: {
@@ -37,7 +38,7 @@ export const SchemaToken = new Schema<IToken>({
     },
     timestamp: {
         type: Number,
-        required: true,
+        required: false,
         default: Math.floor(Date.now() / 1000),
       },
 });

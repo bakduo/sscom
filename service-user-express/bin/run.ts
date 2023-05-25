@@ -27,12 +27,18 @@ process.on('SIGINT', function() {
             appconfig.db.mongo.dbname,
             appconfig.db.mongo.secure,
             appconfig.persistence.mongo);
-
-            DB.getConnection().close(function(err:unknown) {
+            DB.getConnection().close(true)
+            .then(()=>{
                 console.log("Close DB..");
                 loggerApp.debug("Close DB..");
-                process.exit(err ? 1 : 0);
+                process.exit(0);
             });
+
+            // DB.getConnection().close(true,function(err:unknown){
+            //     // console.log("Close DB..");
+            //     // loggerApp.debug("Close DB..");
+            //     // process.exit(err ? 1 : 0);
+            // });
     }
     
     process.exit(0);

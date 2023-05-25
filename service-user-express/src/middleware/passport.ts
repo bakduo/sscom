@@ -2,9 +2,9 @@ import passport from "passport";
 import passportLocal from "passport-local";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { ITokenDTO } from "../dto";
+//import { ITokenDTO } from "../dto";
 import { userDAO, ERRORS_APP, loggerApp, tokenDAO, appconfig } from "../init";
-import { EBase, errorGenericType } from "../interfaces";
+import { EBase, IToken, errorGenericType } from "../interfaces";
 import { validateUser, isValidPassword } from "../util";
 import { checkRealToken, isValidToken } from '../util/validToken';
 
@@ -116,7 +116,8 @@ export const initPassport = ()=>{
     passport.use('login',new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
         try {
 
-             let existeToken:ITokenDTO;
+             //let existeToken:ITokenDTO;
+             let existeToken:IToken;
 
              const encontrado = await userDAO.findOne({keycustom:'email',valuecustom:email.toLowerCase()});
 

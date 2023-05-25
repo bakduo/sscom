@@ -3,13 +3,14 @@ import pino from "pino";
 import stream from 'stream';
 import childProcess from 'child_process';
 import { IGenericDB, FUserDAO, FTokenDAO } from '../dao';
-import { IUserDTO } from '../dto';
-import { ITokenDTO } from '../dto/tokenDTO';
+// import { IUserDTO } from '../dto';
+// import { ITokenDTO } from '../dto/tokenDTO';
 import { initMUserRemoteInstance } from '../dao/sequelize/suser-remote-orm';
 import { configORM } from '../datastore/wsql';
 import { errorGenericType } from '../interfaces/error';
 import { FactorySession } from '../datastore/session/fsession';
 import { ISessionStoreGeneric } from '../datastore/session/generic-session-store';
+import { IToken, IUser } from '../interfaces';
 
 const logThrough = new stream.PassThrough();
 
@@ -183,9 +184,10 @@ interface IConfigDB {
 
 export const appconfig:IConfigDB = config.get('app');
 
-export let userDAO:IGenericDB<IUserDTO>;
-
-export let tokenDAO:IGenericDB<ITokenDTO>;
+//export let userDAO:IGenericDB<IUserDTO>;
+export let userDAO:IGenericDB<IUser>;
+//export let tokenDAO:IGenericDB<ITokenDTO>;
+export let tokenDAO:IGenericDB<IToken>;
 
 const isDev = process.env.NODE_ENV === 'development';
 

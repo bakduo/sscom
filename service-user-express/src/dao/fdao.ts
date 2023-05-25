@@ -1,6 +1,7 @@
 import { MongoConnect } from "../datastore";
-import { IUserDTO, ITokenDTO } from "../dto";
+//import { IUserDTO, ITokenDTO } from "../dto";
 import { appconfig } from "../init/configure";
+import { IToken, IUser } from "../interfaces";
 import { IGenericDB } from "./generic";
 import { MongoTokenDao } from "./token-mongo";
 import { MongoUserRemoteDao } from "./user-remote-mongo";
@@ -24,7 +25,8 @@ export class FUserDAO {
         return FUserDAO.instance;
     }
 
-    build():IGenericDB<IUserDTO>{
+    //build():IGenericDB<IUserDTO>{
+    build():IGenericDB<IUser>{
 
         let newDAO;
 
@@ -77,7 +79,8 @@ export class FTokenDAO {
         return FTokenDAO.instance;
     }
 
-    build():IGenericDB<ITokenDTO>{
+    //build():IGenericDB<ITokenDTO>{
+    build():IGenericDB<IToken>{
 
         let newDAO;
 

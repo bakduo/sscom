@@ -1,12 +1,12 @@
 //import { Entity, PrimaryGeneratedColumn, Column, Index, EntityManager } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { IUserDTO } from "../dto"
 import { loggerApp, appconfig } from "../init"
-import { errorGenericType, NoUserRemote, IKeyValue } from "../interfaces"
+import { errorGenericType, NoUserRemote, IKeyValue, IUser } from "../interfaces"
 import { IGenericDB, IsearchItem } from "./generic"
 import { MUserRemoteInstance } from './sequelize/suser-remote-orm';
 
-export class ORMUserRemote implements IGenericDB<IUserDTO> {
+//export class ORMUserRemote implements IGenericDB<IUserDTO> {
+export class ORMUserRemote implements IGenericDB<IUser> {
 
     private static instance: ORMUserRemote;
     private transaction:boolean;
@@ -27,7 +27,8 @@ export class ORMUserRemote implements IGenericDB<IUserDTO> {
         }
     }
 
-    async updateOne(id: string, item: IUserDTO): Promise<IUserDTO> {
+    //async updateOne(id: string, item: IUserDTO): Promise<IUserDTO> {
+    async updateOne(id: string, item: IUser): Promise<IUser> {
         try {
 
             //const updateItem = await MUserRemoteInstance.findOne({ where: { email: id } });
@@ -92,7 +93,8 @@ export class ORMUserRemote implements IGenericDB<IUserDTO> {
         return ORMUserRemote.instance;
     }
 
-    async getAll(): Promise<IUserDTO[]> {
+    //async getAll(): Promise<IUserDTO[]> {
+    async getAll(): Promise<IUser[]> {
 
         try {
 
@@ -113,7 +115,8 @@ export class ORMUserRemote implements IGenericDB<IUserDTO> {
             throw new Error("Exception GetAll ORM");
         }
     }
-    async findOne(custom: IsearchItem): Promise<IUserDTO> {
+    //async findOne(custom: IsearchItem): Promise<IUserDTO> {
+    async findOne(custom: IsearchItem): Promise<IUser> {
 
         const {keycustom, valuecustom} = custom;
 
@@ -168,7 +171,8 @@ export class ORMUserRemote implements IGenericDB<IUserDTO> {
     }
 
 
-    async saveOne(item: IUserDTO): Promise<IUserDTO> {
+    //async saveOne(item: IUserDTO): Promise<IUserDTO> {
+    async saveOne(item: IUser): Promise<IUser> {
         try {
 
             const {email,deleted,username,password,roles} = item;

@@ -1,4 +1,27 @@
-import { IUserDTO } from "../dto/userDTO.js";
+export interface IUser {
+    email:string;
+    deleted:boolean;
+    username:string;
+    roles:string[];
+    password:string;
+    id?:string;
+}
+
+export interface IPasswordUser {
+    email:string;
+    password:string;
+}
+
+export interface IToken {
+    token:string;
+    refreshToken:string;
+    tmptoken?:string;
+    email?:string;
+    username?:string;
+    date?:number;
+    timestamp?:number;
+    _id?:string;
+}
 
 export interface ITokenDecode {
     id:string;
@@ -64,7 +87,7 @@ export class EBase extends Error {
     }
 }
 
-export class NoUserRemote implements IUserDTO {
+export class NoUserRemote implements IUser {
 
     email: string;
     deleted: boolean;

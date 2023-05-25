@@ -1,12 +1,10 @@
 
 import { Model, Connection } from 'mongoose';
 import { IMongoConnect } from '../datastore';
-import { ITokenDTO } from '../dto';
 import { loggerApp } from '../init';
-import { errorGenericType, IKeyValue } from '../interfaces';
+import { errorGenericType, IKeyValue, IToken } from '../interfaces';
 import { SchemaToken } from '../schemas';
 import { IGenericDB, IsearchItem } from './generic';
-import { IToken } from './IToken';
 
 export class NoToken implements IToken {
 
@@ -29,7 +27,8 @@ export class NoToken implements IToken {
     }
 }
 
-export class MongoTokenDao implements IGenericDB<ITokenDTO> {
+//export class MongoTokenDao implements IGenericDB<ITokenDTO> {
+export class MongoTokenDao implements IGenericDB<IToken> {
 
     model: Model<IToken>;
 
@@ -55,7 +54,8 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
         return MongoTokenDao.instance;
     }
 
-    async findOne (custom: IsearchItem):Promise<ITokenDTO> {
+    //async findOne (custom: IsearchItem):Promise<ITokenDTO> {
+    async findOne (custom: IsearchItem):Promise<IToken> {
 
         const {keycustom, valuecustom} = custom;
 
@@ -67,9 +67,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             const item = await this.model.findOne(queryObj) || false;
             
             if (item){
-                const {token,tmptoken,refreshToken,email,username} = item;
+                const {token,tmptoken,refreshToken,email,username,timestamp} = item;
     
-                return {token,tmptoken,refreshToken,email,username};
+                return {token,tmptoken,refreshToken,email,username,timestamp};
             }    
         } catch (error) {
             const err = error as errorGenericType;
@@ -104,7 +104,8 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 
     }
 
-    async saveOne(item: ITokenDTO): Promise<ITokenDTO>{
+    //async saveOne(item: ITokenDTO): Promise<ITokenDTO>{
+    async saveOne(item: IToken): Promise<IToken>{
 
             try {
 
@@ -117,9 +118,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
 
                 if (newItem){
                    
-                    const {token,email,refreshToken,tmptoken,username} = newItem;
+                    const {token,email,refreshToken,tmptoken,username,timestamp} = newItem;
 
-                    return {token,email,tmptoken,refreshToken,username};
+                    return {token,email,tmptoken,refreshToken,username,timestamp};
 
                 }    
                 
@@ -132,21 +133,23 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             }
     }
 
-    async getAll(): Promise<ITokenDTO[]|[]> {
+    //async getAll(): Promise<ITokenDTO[]|[]> {
+        async getAll(): Promise<IToken[]|[]> {
         
         const allItems = await this.model.find();
         if (allItems){
             return allItems.map((item)=> {
-                const {token,email,date,refreshToken,tmptoken,username}  = item;
+                const {token,email,date,refreshToken,tmptoken,username,timestamp}  = item;
 
-                return {token,email,date,tmptoken,refreshToken,username};
+                return {token,email,date,tmptoken,refreshToken,username,timestamp};
             });
         }
 
         return [];
     }
 
-    async updateOne(token: string, item: ITokenDTO): Promise<ITokenDTO> {
+    //async updateOne(token: string, item: ITokenDTO): Promise<ITokenDTO> {
+    async updateOne(token: string, item: IToken): Promise<IToken> {
 
         const mItem = {
             date:Math.floor(Date.now()/1000),
@@ -162,9 +165,9 @@ export class MongoTokenDao implements IGenericDB<ITokenDTO> {
             try {
                 if (updateItem){
                 
-                    const {token,email,refreshToken,tmptoken,username} = updateItem;
+                    const {token,email,refreshToken,tmptoken,username,timestamp} = updateItem;
     
-                    return {token,email,tmptoken,refreshToken,username};
+                    return {token,email,tmptoken,refreshToken,username,timestamp};
                 }
             } catch (error) {
                 const err = error as errorGenericType;

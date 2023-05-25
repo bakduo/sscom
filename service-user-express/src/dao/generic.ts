@@ -19,6 +19,6 @@ export interface IGenericDB<T> {
 
 }
 
-export interface IPassword<T> {
+export interface IGPassword<T> {
     findPassword(custom:IsearchItem):Promise<T>;
 }

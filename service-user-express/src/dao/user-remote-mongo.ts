@@ -1,13 +1,13 @@
 import { Model, Connection } from 'mongoose';
 import { IMongoConnect } from '../datastore';
-import { IPasswordDTO, IUserDTO } from '../dto';
 import { loggerApp, appconfig } from '../init';
-import { errorGenericType, IKeyValue, NoUserRemote, TDeletedMongo } from '../interfaces';
+import { errorGenericType, IKeyValue, IPasswordUser, IUser, NoUserRemote, TDeletedMongo } from '../interfaces';
 import { SchemaUserRemote } from '../schemas';
-import { IPassword, IsearchItem, IGenericDB } from './generic';
+import { IsearchItem, IGenericDB, IGPassword } from './generic';
 import { IUserRemote } from './Iuser-remote';
 
-export class MongoUserPassword implements IPassword<IPasswordDTO> {
+//export class MongoUserPassword implements IPassword<IPasswordDTO> {
+export class MongoUserPassword implements IGPassword<IPasswordUser> {
 
     model: MongoUserRemoteDao;
 
@@ -15,7 +15,8 @@ export class MongoUserPassword implements IPassword<IPasswordDTO> {
         this.model = user;
     }
 
-    async findPassword (custom: IsearchItem):Promise<IPasswordDTO> {
+    //async findPassword (custom: IsearchItem):Promise<IPasswordDTO> {
+    async findPassword (custom: IsearchItem):Promise<IPasswordUser> {
 
        const user  = await this.model.findOne(custom);
 
@@ -27,7 +28,8 @@ export class MongoUserPassword implements IPassword<IPasswordDTO> {
     }
 }
 
-export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
+//export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
+export class MongoUserRemoteDao implements IGenericDB<IUser> {
     
     model: Model<IUserRemote>;
 
@@ -67,7 +69,8 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
         return MongoUserRemoteDao.instance;
     }
 
-    async findOne (custom: IsearchItem):Promise<IUserDTO> {
+    //async findOne (custom: IsearchItem):Promise<IUserDTO> {
+    async findOne (custom: IsearchItem):Promise<IUser> {
 
         const {keycustom, valuecustom} = custom;
 
@@ -137,7 +140,8 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
         return false;
     }
 
-    async saveOne(item: IUserDTO): Promise<IUserDTO>{
+    //async saveOne(item: IUserDTO): Promise<IUserDTO>{
+    async saveOne(item: IUser): Promise<IUser>{
 
             try {
 
@@ -177,7 +181,8 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
             }
     }
 
-    async getAll(): Promise<IUserDTO[]|[]> {
+    //async getAll(): Promise<IUserDTO[]|[]> {
+    async getAll(): Promise<IUser[]|[]> {
         
         const allItems = await this.model.find();
         if (allItems){
@@ -191,7 +196,8 @@ export class MongoUserRemoteDao implements IGenericDB<IUserDTO> {
         return [];
     }
 
-    async updateOne(email: string, item: IUserDTO): Promise<IUserDTO> {
+    //async updateOne(email: string, item: IUserDTO): Promise<IUserDTO> {
+    async updateOne(email: string, item: IUser): Promise<IUser> {
 
             const mItem = {
                 timestamp:Math.floor(Date.now()/1000),

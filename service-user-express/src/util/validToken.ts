@@ -1,10 +1,11 @@
 
 import jwt from 'jsonwebtoken';
-import { ITokenDTO } from '../dto';
+//import { ITokenDTO } from '../dto';
 import { appconfig } from '../init';
-import { ITokenDecode } from '../interfaces';
+import { IToken, ITokenDecode } from '../interfaces';
 
-export const isValidToken = (tokenRemote:ITokenDTO):boolean =>{
+//export const isValidToken = (tokenRemote:ITokenDTO):boolean =>{
+export const isValidToken = (tokenRemote:IToken):boolean =>{
 
     if (tokenRemote.token.length<=0){
       return false;
